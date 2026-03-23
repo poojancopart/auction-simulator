@@ -1,0 +1,31 @@
+# Speech & Timing Configuration
+# Edit this file — click "Reload" in the UI to apply without restarting the server.
+# Inline comments (# after a value) are supported.
+
+# ── Filler chain ─────────────────────────────────────────────────────────────
+
+# Max fillers to chain back-to-back after each bid callout ends.
+# Lower = fewer ElevenLabs API calls per bid. 0 = fillers disabled entirely.
+filler_chain_max        = 4
+
+# Milliseconds to wait after the bid callout finishes before fillers start.
+# Use this to add a natural pause before the auctioneer fills the silence.
+filler_delay_ms         = 0
+
+# ── Highlights ───────────────────────────────────────────────────────────────
+
+# Seconds after the bid callout ends before the highlight is requested.
+# Highlight fires during the filler chain — this controls when it interrupts.
+highlight_delay_seconds = 4
+
+# Minimum bids placed before the first highlight is eligible to fire.
+min_bids_first          = 3
+
+# Bids required after the previous highlight before the next one is eligible.
+bids_between            = 3
+
+# ── Timer bar ────────────────────────────────────────────────────────────────
+
+# Duration of the countdown bar animation in seconds.
+# Should roughly match the expected time between bids in a live auction.
+timer_duration_seconds  = 10

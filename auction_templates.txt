@@ -1,0 +1,161 @@
+# Auction Templates
+# Variables: {{vehicle}}, {{current_bid}}, {{next_bid}},
+#            {{short_current_bid}}, {{short_next_bid}}, {{state}}, {{buyer_name}}
+# Separate templates within each section with a blank line.
+#
+# FILLERS: each template is a 4-line block — all 4 lines play in sequence.
+#          Lines are never mixed across templates.
+
+# ---------------------------------------------------------------------------
+[OPENING_CALLS_NO_DECLARATION]
+# Used when declarations are OFF — vehicle has not been introduced yet.
+
+Next on the block — {{vehicle}}. Who's starting me at {{current_bid}}?
+
+Coming up now — {{vehicle}}. Opening bid at {{current_bid}}, who's in?
+
+Alright folks, we're live on this {{vehicle}}. Who'll start it at {{current_bid}}?
+
+Here we go now on this {{vehicle}}. Looking for {{current_bid}} to get it going.
+
+Up for auction — {{vehicle}}. Opening bid {{current_bid}}, who's first?
+
+Now selling — {{vehicle}}. Who'll open it at {{current_bid}}?
+
+Let's get it started on this {{vehicle}}. Looking for {{current_bid}} to begin.
+
+# ---------------------------------------------------------------------------
+[OPENING_CALLS_AFTER_DECLARATION]
+# Used when declarations are ON — vehicle already introduced, just ask for first bid.
+
+Alright folks, let's get it started. Who's opening at {{current_bid}}?
+
+Here we go now — looking for the first bid at {{current_bid}}.
+
+Alright, who's jumping in first at {{current_bid}}?
+
+Let's open it up now. Who'll give {{current_bid}}?
+
+Starting bid {{current_bid}}. Who wants to kick it off?
+
+Opening bid {{current_bid}} — who's first in?
+
+Who's getting us started at {{current_bid}}?
+
+# ---------------------------------------------------------------------------
+[BID_ACCEPTED]
+# Full audio version — spoken by ElevenLabs, not shown in chat.
+
+I got a {{current_bid}}!! {{short_current_bid}} from {{state}}….. I got a {{current_bid}} dollar bid….. who'll give me {{next_bid}}, give it {{short_next_bid}} now, make it {{next_bid}} bid…..
+
+There it is!! {{short_current_bid}} from {{state}}….. I got {{current_bid}}, now I need {{next_bid}}, who would give another {{next_bid}} dollar bid, give it {{short_next_bid}} now…..
+
+Alright!! {{short_current_bid}} from {{state}}….. {{current_bid}} I have….. who'll make it {{next_bid}}, give it {{short_next_bid}} now, make it {{next_bid}} bid…..
+
+Strong bid!! {{short_current_bid}} from {{state}}….. I got a {{current_bid}} dollar bid, {{current_bid}} I have, who would give another {{next_bid}} dollar bid, give it {{short_next_bid}} now…..
+
+I see you!! {{short_current_bid}} from {{state}}….. I got {{current_bid}} on the floor….. who'll give me {{next_bid}}, make it {{next_bid}} bid…..
+
+I have {{short_current_bid}}….. anybody get {{short_next_bid}}….. anybody {{short_next_bid}}….. make it {{next_bid}} bid…..
+
+I got {{current_bid}}….. who'll give me {{next_bid}}….. anybody get {{short_next_bid}}….. make it {{next_bid}} now…..
+
+{{current_bid}} I have….. who would give another {{next_bid}} dollar bid….. anybody {{short_next_bid}}…..
+
+I got a {{current_bid}} from {{state}}….. now {{short_next_bid}}, {{short_next_bid}}, {{short_next_bid}}, {{short_next_bid}} right here now, Bid-em-on Bid-em-on Bid-em-on Bid-em-on, fair money, give me {{short_next_bid}} now…..
+
+Alright {{short_current_bid}} from {{state}}….. now {{short_next_bid}}, {{short_next_bid}}, {{short_next_bid}}, {{short_next_bid}}, right now right now, get-them-on get-them-on get-them-on, bring it to {{next_bid}}…..
+
+Strong bid at {{current_bid}}….. now {{short_next_bid}}, {{short_next_bid}}, {{short_next_bid}}, fair money {{short_next_bid}}, Bid-em-on Bid-em-on Bid-em-on Bid-em-on, make it {{next_bid}}…..
+
+I see {{short_current_bid}} from {{state}}….. now {{short_next_bid}}, {{short_next_bid}}, {{short_next_bid}}, {{short_next_bid}} right here now, come on now folks Bid-em-on Bid-em-on Bid-em-on, take it to {{next_bid}}…..
+
+{{short_current_bid}} from {{state}}….. now {{short_next_bid}}, {{short_next_bid}}, {{short_next_bid}}, {{short_next_bid}} right here now, get-them-on get-them-on get-them-on, fair money, make it {{next_bid}}…..
+
+I got {{current_bid}}….. who’s got {{short_next_bid}}, {{short_next_bid}}, {{short_next_bid}}, {{short_next_bid}} now, Bid-em-on Bid-em-on Bid-em-on Bid-em-on, bring it up to {{next_bid}}…..
+
+I see you!! {{short_current_bid}}, {{short_current_bid}} from {{state}}….. I got {{current_bid}} on the floor….. {{short_current_bid}} holding….. who'll give me {{next_bid}}, {{short_next_bid}}, {{short_next_bid}}, make it {{next_bid}} bid….. right here now right now, Bid-em-on Bid-em-on, get-them-on get-them-on, let’s go…..
+
+I got a {{current_bid}} from {{state}}….. now {{short_next_bid}}, {{short_next_bid}}, {{short_next_bid}} who’s got {{next_bid}}, Bid-em-on Bid-em-on, give me {{short_next_bid}} now…..
+
+There it is!! {{short_current_bid}} from {{state}}….. I got {{current_bid}}, {{current_bid}} I have….. now I need {{next_bid}}, {{short_next_bid}}, {{short_next_bid}}, who would give another {{next_bid}} dollar bid….. Bid-em-on Bid-em-on Bid-em-on, get-them-on get-them-on, give it {{short_next_bid}} now….. 
+
+Alright!! {{short_current_bid}} from {{state}}….. {{current_bid}} I have….. {{short_current_bid}} on the floor….. who'll make it {{next_bid}}, {{short_next_bid}}, {{short_next_bid}} now, make it {{next_bid}} bid….. right here now right now, Bid-em-on Bid-em-on, get-them-on get-them-on, step in now…..
+
+
+# ---------------------------------------------------------------------------
+[BID_ACCEPTED_UI]
+# Short version — shown in the chat feed only, never spoken.
+
+{{current_bid}} from {{state}}. Looking for {{next_bid}}.
+
+I've got {{current_bid}} from {{state}} — who's got {{next_bid}}?
+
+{{current_bid}} on the board from {{state}}. Next bid {{next_bid}}.
+
+Bid at {{current_bid}} from {{state}}. Can we make it {{next_bid}}?
+
+{{current_bid}} from {{state}}. Anyone at {{next_bid}}?
+
+Current bid {{current_bid}} from {{state}} — looking for {{next_bid}}.
+
+{{current_bid}} from {{state}}. Who brings {{next_bid}} next?
+
+# ---------------------------------------------------------------------------
+[FILLERS]
+# Each template = 4 lines, separated by a blank line from the next template.
+# All 4 lines play in sequence — never mixed with other templates.
+# Audio only — never shown in chat.
+
+Alright folks, here we go now, stay engaged with me here.
+Great bidding so far, who's ready to step in next.
+I've got {{current_bid}} on this {{vehicle}} from {{state}}, looking for {{next_bid}}.
+Still sitting at {{current_bid}}, can we move it to {{next_bid}}.
+
+Alright everyone, stay with me here for a moment.
+This {{vehicle}} still has plenty of room left in it.
+Current bid {{current_bid}} from {{state}}, who brings {{next_bid}}.
+Still at {{current_bid}} on the floor, looking for {{next_bid}} now.
+
+Here we go folks, keep your eyes on this one.
+Someone out there has the next bid in mind.
+I see {{current_bid}} from {{state}} on this {{vehicle}}, who’ll make it {{next_bid}}.
+We’re still holding at {{current_bid}}, waiting on {{next_bid}}.
+
+This {{vehicle}} is still wide open for the next bidder.
+Right now I’ve got {{current_bid}} from {{state}}, looking for {{next_bid}}.
+Alright now everyone, stay right with me here.
+Still sitting at {{current_bid}}, can anyone push it to {{next_bid}}.
+
+Take another look at this {{vehicle}} while we’re here.
+Alright everyone, stay with me here now.
+Right now we’re sitting at {{current_bid}} from {{state}}, who’s stepping in with {{next_bid}}.
+Still holding at {{current_bid}}, looking for {{next_bid}} now.
+
+
+The floor is alive and this {{vehicle}} is still moving.
+I’ve got {{current_bid}} on the board from {{state}}, looking for {{next_bid}}.
+Alright folks, here we go now, stay engaged.
+Still at {{current_bid}}, waiting for someone to bring {{next_bid}}.
+
+
+
+
+
+# ---------------------------------------------------------------------------
+[CLOSING]
+
+Going once at {{current_bid}}…..
+Going twice at {{short_current_bid}}…..
+Hammer's up…..
+SOLD! {{current_bid}} — {{buyer_name}} takes it!
+
+Last call at {{current_bid}}…..
+Going once…..
+Going twice…..
+SOLD!
+
+{{current_bid}} on the floor…..
+Nobody else??…..
+Hammer's up…..
+SOLD! {{current_bid}} to {{buyer_name}}!

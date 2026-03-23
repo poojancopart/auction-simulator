@@ -1,0 +1,16 @@
+# API keys — never commit
+tokens.txt
+
+# Generated session logs
+session_reports/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# macOS
+.DS_Store
+
+# Claude Code
+.claude/

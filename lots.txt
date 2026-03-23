@@ -1,0 +1,29 @@
+# Lot declarations for the auction simulator
+# Format: vehicle name, declaration, highlight 1, highlight 2, video filename (all optional after line 1)
+# Blank line between entries. Edit anytime and restart the server to apply.
+
+2012 Jeep Wrangler Sport
+Next on the block — twenty twelve Jeep Wrangler Sport. Off-road icon, removable top, built for adventure.
+Four-wheel drive, tow package included — this one is ready to work and play.
+Removable doors and top — this is the real deal, folks. Adventure-ready right off the block.
+
+2021 Kia Soul LX
+All right, here's a sharp one — twenty twenty-one Kia Soul LX. Compact, fuel-efficient, and retail-ready.
+Clean title, low miles for the year — a daily driver that makes sense at any budget.
+Fuel-efficient, easy to park, and easy to insure — this one practically sells itself.
+
+2023 Porsche Macan S
+All right folks, here we go — This twenty twenty-three Porsche Macan S is a compact rocket disguised as a luxury SUV. German engineering, sport-tuned suspension, and that unmistakable Porsche DNA.
+Twin-turbo V6, Sport Chrono package — zero to sixty in four-point-three seconds.
+PASM sport suspension, Bose surround sound, panoramic roof — fully loaded and ready to go.
+
+2019 Mercedes-Benz AMG G 63
+All right ladies and gentlemen — buckle up. Rolling in loud, proud, and unapologetic — the 2019 Mercedes-AMG G 63 has just hit the block! This isn't just a G-Wagon… this is the one that shuts down valet lines.
+Biturbo V8, handbuilt AMG engine — five hundred seventy-seven horsepower on demand.
+Three locking differentials, portal axles — this G-Wagon will go absolutely anywhere.
+Avatar_Video.mp4
+
+2023 BMW 760i xDrive
+Step into the future of executive luxury with this absolute spaceship — the twenty twenty-three BMW 760i xDrive. This is not transportation. This is a rolling VIP lounge.
+S68 twin-turbo V8, five hundred and ninety-three horsepower — pure German power.
+Rear-seat executive lounge, crystal shifter, Bowers and Wilkins Diamond audio — this is first class on wheels.

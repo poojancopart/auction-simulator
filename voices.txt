@@ -1,0 +1,13 @@
+# ElevenLabs voice IDs for the auction simulator
+# Format:  Name: voice_id
+# Add or remove lines here — the dropdown updates automatically on restart.
+
+Auction_JL_var1: 0DBOANJnXe1wzuU8z0ag
+Auction_JL_var2: lEOWAcUU73vejBgh3yTz
+Auction_JL_var3: U8HScaoRQRKQuIMHqQUX
+Auctioneer_Mecum_Clone: LC5nii09ukBBNWmrdSvJ
+Auctioneer_Instant_Clone: wJOIFG9jHbRE5ieiZG4X
+Auctioneer_Instant_Clone_Remix: 4NF832N6VBX5CZEnE0qu
+Jay_Instant_Clone: yz2OgIta3lFJzj5g4P82
+Jay_PVC: hxCFNZkVgRnJPE0BkafU
+Jimmy_Landis_Instant_Clone: xo57OLuptvtTCxTKn0Uw
