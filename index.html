@@ -1,0 +1,1893 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Copart – Live Auction</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    font-size: 13px;
+    background: #1a1f2e;
+    color: #1a1f2e;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    height: 100vh;
+  }
+  a { text-decoration: none; color: inherit; }
+  button { cursor: pointer; border: none; outline: none; }
+  input, select { outline: none; }
+
+  /* ── Top Nav ─────────────────────────────────────────────────── */
+  .top-nav {
+    background: #1a1f2e;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    padding: 0 14px;
+    gap: 16px;
+    flex-shrink: 0;
+    border-bottom: 1px solid #2d3448;
+  }
+  .logo {
+    background: #f5a623;
+    border-radius: 5px;
+    padding: 3px 9px;
+    font-weight: 900;
+    font-size: 16px;
+    color: #1a1f2e;
+    font-style: italic;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .nav-links { display: flex; gap: 2px; align-items: center; }
+  .nav-links a {
+    color: #c8cdd8; font-size: 12px; padding: 5px 9px; border-radius: 4px;
+    transition: background .15s;
+  }
+  .nav-links a:hover { background: #2d3448; color: #fff; }
+  .search-bar { flex: 1; max-width: 380px; margin: 0 auto; position: relative; }
+  .search-bar input {
+    width: 100%; background: #2d3448; border: 1px solid #3d4558;
+    border-radius: 5px; padding: 6px 10px 6px 30px; color: #c8cdd8; font-size: 12px;
+  }
+  .search-bar input::placeholder { color: #6b7280; }
+  .search-bar svg { position: absolute; left: 8px; top: 50%; transform: translateY(-50%); color: #6b7280; pointer-events: none; }
+  .nav-right { display: flex; align-items: center; gap: 10px; margin-left: auto; }
+  .nav-icon-btn { background: none; color: #c8cdd8; padding: 4px; border-radius: 4px; font-size: 16px; }
+  .nav-icon-btn:hover { color: #fff; background: #2d3448; }
+  .nav-avatar { width: 28px; height: 28px; background: #2563eb; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 11px; cursor: pointer; }
+  .nav-mute-btn {
+    background: rgba(255,255,255,0.1); border: 1px solid #3d4558;
+    color: #c8cdd8; font-size: 11px; font-weight: 600;
+    padding: 4px 9px; border-radius: 4px; transition: background .15s;
+  }
+  .nav-mute-btn:hover { background: rgba(255,255,255,0.18); color: #fff; }
+  .nav-mute-btn.muted { color: #ef4444; border-color: #ef4444; }
+
+  /* ── Sub Nav ─────────────────────────────────────────────────── */
+  .sub-nav {
+    background: #222738; height: 36px; display: flex; align-items: center;
+    padding: 0 14px 0 60px; gap: 2px; border-bottom: 1px solid #2d3448; flex-shrink: 0;
+  }
+  .sub-nav a { color: #c8cdd8; font-size: 12px; padding: 5px 11px; border-radius: 4px; transition: background .15s; }
+  .sub-nav a:hover { background: #2d3448; color: #fff; }
+  .sub-nav a.active { color: #fff; }
+
+  /* ── App Body ─────────────────────────────────────────────────── */
+  .app-body { display: flex; flex: 1; overflow: hidden; min-height: 0; }
+
+  /* ── Left Icon Sidebar ────────────────────────────────────────── */
+  .icon-sidebar {
+    width: 48px; background: #1a1f2e; display: flex; flex-direction: column;
+    align-items: center; padding: 8px 0; gap: 4px; border-right: 1px solid #2d3448; flex-shrink: 0;
+  }
+  .sidebar-btn {
+    display: flex; flex-direction: column; align-items: center; gap: 2px;
+    background: none; color: #8892a4; padding: 5px 2px; border-radius: 5px;
+    font-size: 8px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px;
+    width: 44px; transition: background .15s, color .15s; position: relative;
+  }
+  .sidebar-btn:hover { background: #2d3448; color: #fff; }
+  .sidebar-btn.active { color: #fff; background: #2d3448; }
+  .sidebar-badge {
+    position: absolute; top: 3px; right: 3px; background: #ef4444; color: #fff;
+    font-size: 8px; font-weight: 700; border-radius: 8px; padding: 1px 3px;
+    min-width: 13px; text-align: center;
+  }
+
+  /* ── Main Content ─────────────────────────────────────────────── */
+  .main-content { flex: 1; overflow: hidden; background: #f0f2f5; display: flex; flex-direction: column; min-width: 0; }
+
+  /* ── Auction Header Bar ───────────────────────────────────────── */
+  .auction-header {
+    background: #2563eb; color: #fff; padding: 8px 14px;
+    display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
+  }
+  .auction-header .lane-title { font-weight: 700; font-size: 13px; }
+  .auction-header .header-right { display: flex; align-items: center; gap: 8px; }
+  .participants-badge { display: flex; align-items: center; gap: 4px; font-size: 11px; opacity: .9; }
+  .header-icon-btn {
+    background: rgba(255,255,255,.15); color: #fff; width: 26px; height: 26px;
+    border-radius: 4px; display: flex; align-items: center; justify-content: center;
+    font-size: 12px; transition: background .15s;
+  }
+  .header-icon-btn:hover { background: rgba(255,255,255,.28); }
+  .header-icon-btn.danger { background: rgba(239,68,68,.35); }
+  .header-icon-btn.danger:hover { background: rgba(239,68,68,.55); }
+  .header-status-pill {
+    background: rgba(255,255,255,.15); padding: 2px 8px; border-radius: 10px;
+    font-size: 11px; font-weight: 700; letter-spacing: .4px;
+  }
+  .header-status-pill.live { background: #ef4444; animation: pulseRed 2s infinite; }
+  @keyframes pulseRed { 0%,100%{opacity:1} 50%{opacity:.75} }
+
+  /* ── Auction Layout (3-column) ────────────────────────────────── */
+  .auction-layout { display: flex; flex: 1; overflow: hidden; min-height: 0; }
+
+  /* ── Column 1: Vehicle Media ──────────────────────────────────── */
+  .vehicle-media {
+    width: 520px; flex-shrink: 0; background: #fff; display: flex; flex-direction: column;
+    border-right: 1px solid #e5e7eb; overflow: hidden;
+  }
+  .image-carousel { position: relative; background: #111; overflow: hidden; flex-shrink: 0; }
+  .carousel-placeholder {
+    width: 100%; height: 220px;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden;
+  }
+  .carousel-placeholder-label {
+    position: absolute; bottom: 8px; left: 0; right: 0; text-align: center;
+    color: rgba(255,255,255,.5); font-size: 11px; font-weight: 600; letter-spacing: .5px; text-transform: uppercase;
+  }
+  .carousel-vehicle-name {
+    color: rgba(255,255,255,.9); font-size: 20px; font-weight: 800; text-align: center;
+    padding: 0 20px; line-height: 1.3; text-shadow: 0 2px 12px rgba(0,0,0,.6);
+  }
+  .carousel-counter {
+    position: absolute; bottom: 8px; right: 10px; background: rgba(0,0,0,.6);
+    color: #fff; font-size: 10px; padding: 2px 7px; border-radius: 9px;
+  }
+  .thumbnails {
+    display: flex; gap: 3px; padding: 5px; background: #fff;
+    flex-wrap: wrap; border-bottom: 1px solid #e5e7eb; flex-shrink: 0;
+  }
+  .thumb {
+    width: 40px; height: 30px; background: #e5e7eb; border-radius: 3px;
+    cursor: pointer; border: 2px solid transparent; transition: border-color .15s; flex-shrink: 0;
+  }
+  .thumb.active { border-color: #2563eb; }
+  .thumb-inner { width: 100%; height: 100%; background: linear-gradient(135deg, #e5e7eb, #d1d5db); border-radius: 1px; }
+
+  /* Auctioneer + bid history split row */
+  .auctioneer-bid-row {
+    display: flex; flex: 1; min-height: 0; overflow: hidden; border-bottom: 1px solid #e5e7eb;
+  }
+
+  /* Left: auctioneer chat */
+  .auctioneer-chat-panel {
+    width: 50%; flex-shrink: 0; display: flex; flex-direction: column;
+    align-items: center; padding: 8px 8px 0; border-right: 1px solid #e5e7eb;
+    background: #fff; overflow: hidden; position: relative;
+  }
+  .chat-bubble-wrap { width: 100%; display: flex; flex-direction: column; align-items: center; flex-shrink: 0; }
+  .chat-bubble {
+    background: #1e293b; color: #f1f5f9; border-radius: 10px 10px 10px 3px;
+    padding: 7px 9px; font-size: 11px; line-height: 1.45; width: 100%;
+    box-shadow: 0 2px 8px rgba(0,0,0,.18); min-height: 44px; transition: background .2s;
+  }
+  .chat-bubble .chat-label {
+    display: block; font-size: 9px; color: #94a3b8; text-transform: uppercase;
+    letter-spacing: .5px; margin-bottom: 2px; font-weight: 700;
+  }
+  .chat-bubble .chat-msg { color: #f8fafc; font-size: 11.5px; }
+  .chat-bubble strong { color: #fbbf24; }
+  .chat-bubble-tail {
+    width: 0; height: 0; border-left: 7px solid transparent;
+    border-right: 7px solid transparent; border-top: 8px solid #1e293b;
+    margin-right: 60%; margin-top: 0; flex-shrink: 0;
+  }
+  .auctioneer-img-wrap {
+    flex: 1; display: flex; align-items: flex-end; justify-content: center;
+    overflow: hidden; width: 100%; min-height: 0; position: relative;
+  }
+  .auctioneer-real-img {
+    width: 70%; height: 88%; object-fit: contain; object-position: bottom center; display: block;
+    transition: filter .3s;
+  }
+  .auctioneer-real-img.speaking { filter: drop-shadow(0 0 12px rgba(251,191,36,.6)); }
+  .filler-dots {
+    position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%);
+    display: flex; gap: 4px; opacity: 0; transition: opacity .2s;
+  }
+  .filler-dots.active { opacity: 1; }
+  .filler-dot { width: 6px; height: 6px; background: #fbbf24; border-radius: 50%; animation: bounce .8s infinite; }
+  .filler-dot:nth-child(2) { animation-delay: .15s; }
+  .filler-dot:nth-child(3) { animation-delay: .30s; }
+  @keyframes bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-4px)} }
+
+  /* Right: bid history */
+  .bid-history-section {
+    flex: 1; padding: 10px; background: #fff; display: flex; flex-direction: column; overflow-y: auto;
+  }
+  .bid-history-title {
+    font-size: 10px; font-weight: 700; color: #6b7280;
+    text-transform: uppercase; letter-spacing: .5px; margin-bottom: 6px; flex-shrink: 0;
+  }
+  .bid-row { display: flex; align-items: center; gap: 7px; padding: 5px 0; border-bottom: 1px solid #f3f4f6; }
+  .bid-row:last-child { border-bottom: none; }
+  .bid-avatar {
+    width: 22px; height: 22px; border-radius: 50%; color: #fff; font-size: 9px;
+    font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .bid-avatar.texas      { background: #ef4444; }
+  .bid-avatar.california { background: #2563eb; }
+  .bid-avatar.vegas      { background: #a855f7; }
+  .bid-avatar.auctioneer { background: #374151; }
+  .bid-name { font-size: 11px; color: #374151; flex: 1; line-height: 1.3; }
+  .bid-name.auctioneer-msg { font-style: italic; color: #6b7280; font-size: 10.5px; }
+  .bid-amount { font-size: 11px; font-weight: 700; color: #111827; white-space: nowrap; }
+  .bid-history-empty { font-size: 11px; color: #9ca3af; text-align: center; padding: 20px 0; }
+
+  /* ── Column 2: Vehicle Details ────────────────────────────────── */
+  .vehicle-details {
+    flex: 1; background: #fff; overflow: hidden; min-width: 0;
+    border-right: 1px solid #e5e7eb; display: flex; flex-direction: column;
+  }
+  .vehicle-info-header { padding: 10px 14px 7px; border-bottom: 1px solid #f3f4f6; flex-shrink: 0; }
+  .vehicle-title-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+  .vehicle-title { font-size: 17px; font-weight: 800; color: #111827; line-height: 1.2; }
+  .lot-meta { display: flex; align-items: center; gap: 8px; margin-top: 3px; font-size: 11px; color: #6b7280; }
+  .badge-row { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; align-items: center; }
+  .badge {
+    display: inline-flex; align-items: center; gap: 3px;
+    padding: 2px 7px; border-radius: 10px; font-size: 10px; font-weight: 600; line-height: 1;
+  }
+  .badge-live { background: #fee2e2; color: #dc2626; border: 1px solid #fca5a5; animation: pulseRed 2s infinite; }
+  .badge-green { background: #d1fae5; color: #065f46; border: 1px solid #6ee7b7; }
+  .badge-yellow { background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; }
+  .badge-blue { background: #dbeafe; color: #1e40af; border: 1px solid #93c5fd; }
+  .badge .dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+  .dot-green { background: #10b981; }
+  .dot-red { background: #ef4444; }
+
+  .section-block { padding: 8px 14px; border-bottom: 1px solid #f3f4f6; flex-shrink: 0; }
+  .section-label {
+    display: flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .6px; color: #7c3aed; margin-bottom: 4px;
+  }
+  .section-label.announce { color: #d97706; }
+  .section-label.gray { color: #6b7280; }
+  .section-text { font-size: 12px; color: #374151; line-height: 1.5; }
+  .section-text strong { color: #111827; }
+
+  /* ── Live Bid Area (pinned bottom of col 2) ───────────────────── */
+  .live-bid-area { padding: 10px 14px; background: #fff; margin-top: auto; flex-shrink: 0; transition: background 0.5s ease; }
+  .live-bid-area.winning { background: linear-gradient(180deg, #f0fdf4 0%, #fff 60%); }
+  .live-bid-area.losing  { background: linear-gradient(180deg, #fff1f2 0%, #fff 60%); }
+  .live-header { display: flex; align-items: center; gap: 6px; margin-bottom: 7px; }
+  .live-dot { width: 7px; height: 7px; background: #ef4444; border-radius: 50%; animation: pulseRed 1s infinite; }
+  .live-label { font-size: 10px; font-weight: 700; color: #ef4444; text-transform: uppercase; letter-spacing: .5px; }
+
+  .bid-live-grid {
+    display: grid; grid-template-columns: 1fr auto 1fr; gap: 7px;
+    align-items: center; margin-bottom: 7px;
+  }
+  .bid-player { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+  .bid-player-label { font-size: 9px; color: #6b7280; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; margin-bottom: 2px; }
+  .player-avatar {
+    width: 32px; height: 32px; border-radius: 50%; font-size: 11px;
+    font-weight: 700; display: flex; align-items: center; justify-content: center; color: #fff;
+  }
+  .player-avatar.leading { background: #374151; }
+  .player-avatar.texas      { background: #ef4444; }
+  .player-avatar.california { background: #2563eb; }
+  .player-avatar.vegas      { background: #a855f7; }
+  .player-avatar.you        { background: #f59e0b; }
+  .player-avatar.empty      { background: #d1d5db; color: #9ca3af; }
+  .player-name { font-size: 11px; font-weight: 600; color: #111827; }
+  .player-amount { font-size: 12px; font-weight: 700; color: #111827; }
+  .player-amount.none { color: #9ca3af; font-weight: 500; }
+
+  /* Timer circle */
+  .timer-circle {
+    width: 64px; height: 64px; border-radius: 50%;
+    background: conic-gradient(#22c55e 100%, #e5e7eb 0%);
+    display: flex; align-items: center; justify-content: center; position: relative; flex-shrink: 0;
+  }
+  .timer-inner {
+    width: 52px; height: 52px; background: #16a34a; border-radius: 50%;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; color: #fff;
+    transition: background .3s;
+  }
+  .timer-number { font-size: 17px; font-weight: 800; line-height: 1; }
+  .timer-sub { font-size: 7px; font-weight: 700; letter-spacing: .5px; opacity: .85; }
+
+  .reserve-bar { background: #f3f4f6; border-radius: 3px; height: 5px; margin-bottom: 7px; position: relative; overflow: hidden; }
+  .reserve-fill { height: 100%; background: #22c55e; border-radius: 3px; transition: width .4s; }
+  .reserve-label { text-align: center; font-size: 9px; color: #6b7280; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 8px; }
+
+  .current-bid-row { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 8px; }
+  .current-bid-block .label { font-size: 10px; color: #6b7280; font-weight: 500; margin-bottom: 1px; }
+  .current-bid-block .amount { font-size: 24px; font-weight: 800; color: #111827; line-height: 1; }
+  .asking-block { text-align: right; }
+  .asking-block .label { font-size: 10px; color: #2563eb; font-weight: 600; text-transform: uppercase; letter-spacing: .4px; margin-bottom: 1px; }
+  .asking-block .amount { font-size: 15px; font-weight: 700; color: #2563eb; }
+
+  .bid-buttons { display: flex; flex-direction: column; gap: 5px; margin-bottom: 4px; }
+  .btn-bid-primary {
+    background: #2563eb; color: #fff; font-size: 13px; font-weight: 700;
+    padding: 10px 8px; border-radius: 6px; display: flex; align-items: center;
+    justify-content: center; gap: 4px; transition: background .15s, transform .1s; width: 100%;
+  }
+  .btn-bid-primary:hover:not(:disabled) { background: #1d4ed8; }
+  .btn-bid-primary:active:not(:disabled) { transform: scale(.98); }
+  .btn-bid-primary:disabled { opacity: .4; cursor: not-allowed; }
+  .btn-bid-secondary {
+    background: #f3f4f6; color: #374151; font-size: 12px; font-weight: 600;
+    padding: 9px 8px; border-radius: 6px; border: 1px solid #e5e7eb;
+    transition: background .15s, transform .1s; width: 100%;
+  }
+  .btn-bid-secondary:hover:not(:disabled) { background: #e5e7eb; }
+  .btn-bid-secondary:active:not(:disabled) { transform: scale(.98); }
+  .btn-bid-secondary:disabled { opacity: .4; cursor: not-allowed; }
+  .tap-label { text-align: center; font-size: 10px; color: #9ca3af; }
+
+  /* Sold overlay in bid area */
+  .sold-overlay {
+    display: none; background: linear-gradient(135deg, #78350f, #92400e);
+    border: 2px solid #f59e0b; border-radius: 8px; padding: 12px; text-align: center; margin-bottom: 8px;
+  }
+  .sold-overlay.visible { display: block; animation: pop .4s ease; }
+  .sold-title { font-size: 22px; font-weight: 900; color: #fbbf24; letter-spacing: .1em; }
+  .sold-sub   { font-size: 12px; color: #fde68a; margin-top: 3px; }
+  @keyframes pop { 0%{transform:scale(.85);opacity:0} 60%{transform:scale(1.04)} 100%{transform:scale(1);opacity:1} }
+
+  .close-btn-row { display: flex; gap: 6px; margin-top: 6px; }
+  .btn-going-once {
+    flex: 1; background: #d97706; color: #fff; font-size: 11px; font-weight: 700;
+    padding: 7px 8px; border-radius: 5px; transition: background .15s;
+  }
+  .btn-going-once:hover:not(:disabled) { background: #b45309; }
+  .btn-going-once:disabled { opacity: .4; cursor: not-allowed; }
+  .btn-reset {
+    background: #374151; color: #d1d5db; font-size: 11px; font-weight: 600;
+    padding: 7px 12px; border-radius: 5px; transition: background .15s;
+  }
+  .btn-reset:hover:not(:disabled) { background: #1f2937; color: #fff; }
+  .btn-reset:disabled { opacity: .4; cursor: not-allowed; }
+
+  /* ── Column 3: Upcoming Lots ──────────────────────────────────── */
+  .upcoming-lots {
+    width: 300px; flex-shrink: 0; background: #f9fafb;
+    display: flex; flex-direction: column; border-left: 1px solid #e5e7eb; overflow: hidden;
+  }
+  .upcoming-header {
+    padding: 9px 11px; display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 1px solid #e5e7eb; background: #fff; flex-shrink: 0;
+  }
+  .upcoming-title { font-size: 12px; font-weight: 700; color: #111827; }
+  .upcoming-title span { color: #6b7280; font-weight: 500; }
+  .lots-list { overflow-y: auto; flex: 1; }
+  .lot-card {
+    background: #fff; border-bottom: 1px solid #e5e7eb; padding: 9px 11px;
+    transition: background .15s; position: relative; cursor: pointer;
+  }
+  .lot-card:hover { background: #f0f9ff; }
+  .lot-card.active-lot { background: #eff6ff; border-left: 3px solid #2563eb; }
+  .lot-card.up-next    { background: #fffbeb; border-left: 3px solid #f59e0b; }
+  .lot-card-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 5px; margin-bottom: 5px; }
+  .lot-card-title { font-size: 12px; font-weight: 700; color: #111827; line-height: 1.2; }
+  .lot-card-badge { font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 8px; white-space: nowrap; flex-shrink: 0; }
+  .badge-active-lot { background: #dbeafe; color: #1e40af; border: 1px solid #93c5fd; }
+  .badge-next-lot   { background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; }
+  .badge-upcoming   { background: #f3f4f6; color: #6b7280; border: 1px solid #d1d5db; }
+  .lot-card-thumb {
+    display: flex; gap: 7px; align-items: center; margin-bottom: 5px;
+  }
+  .lot-thumb {
+    width: 64px; height: 46px; border-radius: 4px; flex-shrink: 0; overflow: hidden;
+    background: linear-gradient(135deg, #374151, #1f2937);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .lot-thumb-text { font-size: 8px; color: rgba(255,255,255,.5); font-weight: 600; text-transform: uppercase; text-align: center; padding: 3px; line-height: 1.3; }
+  .lot-card-meta { flex: 1; min-width: 0; }
+  .lot-meta-row { font-size: 10px; color: #6b7280; margin-bottom: 2px; }
+  .lot-bid-row { display: flex; align-items: center; justify-content: space-between; margin-top: 5px; }
+  .lot-bid-label { font-size: 9.5px; color: #6b7280; }
+  .lot-bid-amount { font-size: 13px; font-weight: 700; color: #111827; }
+  .lot-bid-amount.live { color: #2563eb; }
+
+  /* ── Setup Modal (shown when idle) ────────────────────────────── */
+  .setup-modal-bg {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,.55);
+    z-index: 100; align-items: center; justify-content: center;
+  }
+  .setup-modal-bg.visible { display: flex; }
+  .setup-modal {
+    background: #fff; border-radius: 12px; padding: 24px;
+    width: 440px; max-width: 95vw; box-shadow: 0 24px 60px rgba(0,0,0,.3);
+  }
+  .setup-modal-title { font-size: 16px; font-weight: 800; color: #111827; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+  .setup-modal-title .dot { width: 8px; height: 8px; border-radius: 50%; background: #ef4444; animation: pulseRed 1s infinite; }
+  .setup-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .setup-field label { display: block; font-size: 10px; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 4px; }
+  .setup-field select, .setup-field input {
+    width: 100%; border: 1px solid #d1d5db; border-radius: 6px; padding: 8px 10px;
+    font-size: 13px; color: #111827; background: #fff;
+  }
+  .setup-field select:focus, .setup-field input:focus { border-color: #2563eb; box-shadow: 0 0 0 2px rgba(37,99,235,.15); }
+  .setup-field.full { grid-column: 1 / -1; }
+  .btn-start {
+    width: 100%; background: #2563eb; color: #fff; font-size: 14px; font-weight: 700;
+    padding: 12px; border-radius: 7px; margin-top: 14px; transition: background .15s, transform .1s;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+  }
+  .btn-start:hover { background: #1d4ed8; }
+  .btn-start:active { transform: scale(.98); }
+
+  /* ── TTS Settings Panel ───────────────────────────────────────── */
+  .tts-panel {
+    display: none; position: fixed; top: 90px; right: 16px; z-index: 200;
+    background: #1e293b; border: 1px solid #334155; border-radius: 10px;
+    padding: 14px; width: 280px; box-shadow: 0 8px 30px rgba(0,0,0,.4);
+  }
+  .tts-panel.open { display: block; }
+  .tts-panel-title { font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 10px; }
+  .tts-row { margin-bottom: 8px; }
+  .tts-row label { display: flex; justify-content: space-between; font-size: 10px; color: #94a3b8; font-weight: 600; margin-bottom: 3px; text-transform: uppercase; letter-spacing: .4px; }
+  .tts-row label span { color: #e2e8f0; }
+  .tts-row input[type=range] { width: 100%; accent-color: #2563eb; }
+  .tts-row select { width: 100%; background: #0f172a; border: 1px solid #334155; border-radius: 4px; padding: 5px 8px; color: #e2e8f0; font-size: 12px; }
+  .tts-toggle { display: flex; align-items: center; gap: 6px; font-size: 11px; color: #94a3b8; }
+  .tts-toggle input { accent-color: #2563eb; }
+
+  /* ── Session Report Modal ──────────────────────────────────────── */
+  .report-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,.72);
+    z-index: 300; align-items: center; justify-content: center; padding: 20px;
+  }
+  .report-overlay.active { display: flex; }
+  .report-modal {
+    background: #1e293b; border: 1.5px solid #f59e0b; border-radius: 12px;
+    width: 100%; max-width: 700px; max-height: 88vh; display: flex;
+    flex-direction: column; overflow: hidden; box-shadow: 0 24px 60px rgba(0,0,0,.6);
+  }
+  .report-modal-header {
+    padding: 12px 16px; border-bottom: 1px solid #334155;
+    display: flex; justify-content: space-between; align-items: center; flex-shrink: 0;
+  }
+  .report-modal-header span { font-size: 12px; font-weight: 700; color: #f59e0b; letter-spacing: .07em; }
+  .report-actions { display: flex; gap: 6px; }
+  .report-btn {
+    background: #0f172a; border: 1px solid #334155; color: #e2e8f0;
+    padding: 5px 10px; border-radius: 5px; font-size: 11px; font-weight: 600; transition: background .15s;
+  }
+  .report-btn:hover { background: #1e3a5f; }
+  .report-body {
+    flex: 1; overflow-y: auto; padding: 16px 20px;
+    font-family: 'SFMono-Regular', 'Consolas', monospace; font-size: 11px;
+    line-height: 1.65; color: #e2e8f0; white-space: pre; overflow-x: auto;
+  }
+
+  /* ── Video declaration ────────────────────────────────────────── */
+  .video-overlay {
+    display: none; position: absolute; inset: 0; background: #000; z-index: 10;
+    align-items: center; justify-content: center;
+  }
+  .video-overlay.active { display: flex; }
+  .video-overlay video { width: 100%; height: 100%; object-fit: contain; }
+
+  /* ── Scrollbar ────────────────────────────────────────────────── */
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 2px; }
+
+  /* ── Carousel Image ───────────────────────────────────────────── */
+  .carousel-img {
+    width: 100%; height: 260px; object-fit: cover; display: block;
+    transition: opacity 0.3s ease;
+  }
+
+  /* ── Lot Highlights Ticker ────────────────────────────────────── */
+  .lot-ticker {
+    background: #f0f4ff; border-top: 1px solid #dde6ff; border-bottom: 1px solid #dde6ff;
+    display: flex; align-items: center; padding: 0 10px; gap: 8px;
+    height: 34px; flex-shrink: 0; overflow: hidden;
+  }
+  .ticker-badge {
+    background: #1e40af; color: #fff; font-size: 8px; font-weight: 700;
+    padding: 2px 6px; border-radius: 3px; text-transform: uppercase;
+    letter-spacing: .5px; white-space: nowrap; flex-shrink: 0;
+  }
+  .ticker-text {
+    font-size: 11px; color: #374151; overflow: hidden; text-overflow: ellipsis;
+    white-space: nowrap; flex: 1; transition: opacity 0.3s ease;
+  }
+  .ticker-dots {
+    display: flex; gap: 3px; flex-shrink: 0;
+  }
+  .ticker-dot {
+    width: 5px; height: 5px; border-radius: 50%; background: #bfdbfe; cursor: pointer; transition: background .2s;
+  }
+  .ticker-dot.active { background: #1e40af; }
+
+  /* ── Chat Bubbles Stack ───────────────────────────────────────── */
+  .chat-bubbles-stack { width: 100%; display: flex; flex-direction: column; gap: 3px; flex-shrink: 0; }
+  @keyframes bubbleFadeIn { from { opacity: 0; transform: translateY(5px); } to {} }
+  .chat-bubble.bubble-current { opacity: 1; animation: bubbleFadeIn 0.35s ease; }
+  .chat-bubble.bubble-old1   { opacity: 0.5; font-size: 10.5px; padding: 5px 8px; min-height: 0; }
+  .chat-bubble.bubble-old2   { opacity: 0.2; font-size: 10px;   padding: 4px 8px; min-height: 0; }
+
+  /* ── Compact Specs Grid ───────────────────────────────────────── */
+  .specs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0; }
+  .spec-chip {
+    display: flex; flex-direction: column; padding: 5px 6px;
+    border-bottom: 1px solid #f3f4f6;
+  }
+  .spec-chip:nth-child(odd) { border-right: 1px solid #f3f4f6; }
+  .spec-chip:nth-last-child(-n+2) { border-bottom: none; }
+  .spec-chip .spec-key { font-size: 9px; color: #9ca3af; text-transform: uppercase; letter-spacing: .4px; margin-bottom: 1px; }
+  .spec-chip .spec-val { font-size: 11px; font-weight: 600; color: #111827; line-height: 1.2; }
+
+  /* ── Info Tabs (Announcements / Notes) ────────────────────────── */
+  .info-tabs-bar { display: flex; gap: 3px; margin-bottom: 6px; }
+  .info-tab-btn {
+    flex: 1; background: #f3f4f6; border: 1px solid #e5e7eb;
+    color: #6b7280; font-size: 10px; font-weight: 700; padding: 5px 4px;
+    border-radius: 5px; cursor: pointer; transition: all .15s;
+    text-transform: uppercase; letter-spacing: .3px;
+  }
+  .info-tab-btn.active { background: #1e3a8a; border-color: #1e3a8a; color: #fff; }
+  .info-tab-content { display: none; }
+  .info-tab-content.active { display: block; }
+
+  /* ── Specs Table (legacy) ─────────────────────────────────────── */
+  .specs-table { width: 100%; border-collapse: collapse; }
+  .specs-table td { padding: 4px 6px; border-bottom: 1px solid #f3f4f6; font-size: 11px; color: #374151; vertical-align: top; }
+  .specs-table td:first-child { font-weight: 700; color: #111827; width: 38%; }
+  .specs-table tr:last-child td { border-bottom: none; }
+
+  /* ── Winning bid highlight ────────────────────────────────────── */
+  .bid-row.winning { background: #f0fdf4; border-radius: 4px; margin: 0 -2px; padding-left: 4px; padding-right: 4px; border-bottom: 1px solid #bbf7d0 !important; }
+  .bid-row.winning .bid-amount { color: #16a34a !important; font-weight: 800; }
+  .bid-row.winning .bid-name { color: #15803d !important; font-weight: 700; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════ TOP NAV ═══════════════ -->
+<nav class="top-nav">
+  <div class="logo"><em>Copart</em></div>
+
+  <div class="nav-links">
+    <a href="#">Vehicles ▾</a>
+    <a href="#">Auctions ▾</a>
+    <a href="#">Sell ▾</a>
+    <a href="#">About ▾</a>
+  </div>
+
+  <div class="search-bar">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    <input type="text" placeholder="Search vehicles, lots, VINs..." />
+  </div>
+
+  <div class="nav-right">
+    <button class="nav-mute-btn" id="muteBtn" onclick="toggleMute()">🔊 Voice On</button>
+    <button class="nav-mute-btn" onclick="toggleTtsPanel()" id="ttsToggleBtn">⚙ TTS</button>
+    <button class="nav-mute-btn" onclick="reloadConfig()">↺ Reload</button>
+    <select id="voiceSelect" onchange="changeVoice(this)" style="background:#2d3448;border:1px solid #3d4558;color:#c8cdd8;font-size:11px;padding:4px 6px;border-radius:4px;max-width:140px;"></select>
+    <div class="nav-avatar">CA</div>
+  </div>
+</nav>
+
+<!-- ═══════════════ SUB NAV ═══════════════ -->
+<nav class="sub-nav">
+  <a href="#" class="active">Dashboard</a>
+  <a href="#">My Tools ▾</a>
+  <a href="#">Bid Status ▾</a>
+  <a href="#">Payments ▾</a>
+  <a href="#">Feedback</a>
+</nav>
+
+<!-- ═══════════════ APP BODY ═══════════════ -->
+<div class="app-body">
+
+  <!-- Left Icon Sidebar -->
+  <aside class="icon-sidebar">
+    <button class="sidebar-btn" onclick="openSetup()" title="Start Auction">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      START
+    </button>
+    <button class="sidebar-btn" id="lotsBtn" title="My Lots">
+      <span class="sidebar-badge" id="lotsBadge">—</span>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+      LOTS
+    </button>
+    <button class="sidebar-btn" onclick="toggleMute()" id="soundBtn" title="Toggle Sound">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
+      SOUND
+    </button>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main-content">
+
+    <!-- Auction Header Bar -->
+    <div class="auction-header">
+      <div class="lane-title" id="laneTitle">Live Auction – Lane A</div>
+      <div class="header-right">
+        <span class="header-status-pill" id="statusPill">IDLE</span>
+        <div class="participants-badge">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          3 Participants
+        </div>
+        <button class="header-icon-btn" onclick="openSetup()" title="Setup Auction">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+        </button>
+        <button class="header-icon-btn danger" id="closeBtn" onclick="forceClose()" disabled title="Going Once…">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        </button>
+        <button class="header-icon-btn" id="resetBtn" onclick="resetAuction()" disabled title="Reset">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.44"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Auction 3-Column Layout -->
+    <div class="auction-layout">
+
+      <!-- ── Column 1: Vehicle Media ── -->
+      <div class="vehicle-media">
+
+        <!-- Carousel -->
+        <div class="image-carousel">
+          <img id="carouselImg" class="carousel-img" src="/images/New%20UI/BMW%20X%20Drive-%20new/87250995_Image_1.jpg" alt="Vehicle"/>
+          <div class="carousel-counter" id="carouselCounter">1 / 7</div>
+        </div>
+
+        <!-- Thumbnails (populated by JS) -->
+        <div class="thumbnails" id="thumbnailsRow"></div>
+
+        <!-- Lot Highlights Ticker -->
+        <div class="lot-ticker">
+          <span class="ticker-badge" id="tickerBadge">Declaration</span>
+          <span class="ticker-text" id="tickerText">—</span>
+          <div class="ticker-dots" id="tickerDots"></div>
+        </div>
+
+        <!-- Auctioneer + Bid History split row -->
+        <div class="auctioneer-bid-row" style="position:relative;">
+
+          <!-- Video overlay (declaration video) -->
+          <div class="video-overlay" id="videoOverlay">
+            <video id="declarationVideo" playsinline></video>
+          </div>
+
+          <!-- Left: Auctioneer chat -->
+          <div class="auctioneer-chat-panel">
+            <div class="chat-bubbles-stack" id="chatBubblesStack">
+              <div class="chat-bubble bubble-current">
+                <span class="chat-label">🎙 Auctioneer</span>
+                <span class="chat-msg">Configure the auction and press Start to begin.</span>
+              </div>
+            </div>
+            <div class="chat-bubble-tail"></div>
+            <div class="auctioneer-img-wrap">
+              <img src="/images/Image_Auctioneer.png" alt="Auctioneer" class="auctioneer-real-img" id="auctioneerImg"/>
+              <div class="filler-dots" id="fillerDots">
+                <div class="filler-dot"></div>
+                <div class="filler-dot"></div>
+                <div class="filler-dot"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: Bid History -->
+          <div class="bid-history-section">
+            <div class="bid-history-title">Bid History</div>
+            <div id="bidHistory">
+              <div class="bid-history-empty">No bids yet</div>
+            </div>
+          </div>
+
+        </div><!-- /auctioneer-bid-row -->
+
+      </div><!-- /vehicle-media -->
+
+      <!-- ── Column 2: Vehicle Details ── -->
+      <div class="vehicle-details">
+
+        <!-- Vehicle header -->
+        <div class="vehicle-info-header">
+          <div class="vehicle-title-row">
+            <div class="vehicle-title" id="vehicleTitle">—</div>
+          </div>
+          <div class="lot-meta">
+            <span id="lotMetaText">Select a vehicle to start</span>
+          </div>
+          <div class="badge-row" id="statusBadgeRow">
+            <span class="badge badge-blue">Simulator</span>
+          </div>
+        </div>
+
+        <!-- hidden elements for ticker data -->
+        <p id="declarationText" style="display:none">Start an auction to see the vehicle declaration here.</p>
+        <p id="aiSummaryText" style="display:none">Front-end damage appears cosmetic to moderate - engine start confirmed. Low-mileage luxury unit at ~13k miles. Clean titles like this have sold around ~$60k. Strong rebuild potential with high resale upside.</p>
+        <p id="announcementsText" style="display:none">Seller says: Vehicle starts and drives under its own power. Rear bumper, tailgate, and left rear quarter panel show impact damage. Rear sensors inoperable. Passenger airbags deployed — dash light present. Selling with manufacturer's certificate of origin.</p>
+        <p id="notesText" style="display:none">From images, damage seems mostly front fascia — but hard to rule out hidden issues. Keeping a ~$5k–$10k buffer for sensors, calibration, or alignment before pushing higher.</p>
+        <div id="competitorsPanel" style="display:none"></div>
+
+        <!-- AI Summary -->
+        <div class="section-block" style="padding-bottom:7px;">
+          <div class="section-label" style="margin-bottom:3px;">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            AI Insight
+          </div>
+          <p class="section-text" id="aiSummaryDisplay" style="font-size:11.5px;line-height:1.5;color:#374151;">Front-end damage appears cosmetic to moderate - <strong>engine start confirmed</strong>. Low-mileage luxury unit at ~13k miles. Clean titles like this have sold around ~$60k. Strong rebuild potential with high resale upside.</p>
+        </div>
+
+        <!-- Compact Specs -->
+        <div class="section-block" style="padding-top:6px;padding-bottom:6px;">
+          <div class="section-label gray" style="margin-bottom:4px;">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+            Specifications
+          </div>
+          <div class="specs-grid">
+            <div class="spec-chip"><span class="spec-key">Damage</span><span class="spec-val">Front end</span></div>
+            <div class="spec-chip"><span class="spec-key">Engine</span><span class="spec-val">4.4L V8 TwinTurbo</span></div>
+            <div class="spec-chip"><span class="spec-key">Odometer</span><span class="spec-val">12,963 mi</span></div>
+            <div class="spec-chip"><span class="spec-key">Drive</span><span class="spec-val">AWD / xDrive</span></div>
+            <div class="spec-chip"><span class="spec-key">Trans.</span><span class="spec-val">8-Speed Auto</span></div>
+            <div class="spec-chip"><span class="spec-key">VIN</span><span class="spec-val" style="font-size:10px;">…WX334821</span></div>
+          </div>
+        </div>
+
+        <!-- Announcements / Notes tabs -->
+        <div class="section-block" style="padding-top:6px;padding-bottom:6px;">
+          <div class="info-tabs-bar">
+            <button class="info-tab-btn" id="tabBtnAnn" onclick="switchTab('ann')">📢 Announcements</button>
+            <button class="info-tab-btn active" id="tabBtnNotes" onclick="switchTab('notes')">📝 My Notes</button>
+          </div>
+          <div id="tabAnn" class="info-tab-content">
+            <p class="section-text" style="font-size:11px;line-height:1.5;">Seller says: Vehicle starts and drives. Rear bumper, tailgate, and left rear quarter show impact damage. Rear sensors inoperable. Airbags deployed — dash light present. Selling with manufacturer's certificate of origin.</p>
+          </div>
+          <div id="tabNotes" class="info-tab-content active">
+            <p class="section-text" style="font-size:11px;line-height:1.5;">From images, damage seems mostly front fascia — but hard to rule out hidden issues. Keeping a <strong>~$5k–$10k buffer</strong> for sensors, calibration, or alignment before pushing higher.</p>
+          </div>
+        </div>
+
+        <!-- Spacer -->
+        <div style="flex:1;min-height:0"></div>
+
+        <!-- Live Bid Area -->
+        <div class="live-bid-area">
+
+          <!-- Sold overlay -->
+          <div class="sold-overlay" id="soldOverlay">
+            <div class="sold-title">🔨 SOLD!</div>
+            <div class="sold-sub" id="soldSub"></div>
+          </div>
+
+          <div class="live-header">
+            <div class="live-dot" id="liveDot" style="opacity:0"></div>
+            <span class="live-label" id="liveLabel" style="opacity:0">Live</span>
+          </div>
+
+          <!-- Leading / Timer / Previous -->
+          <div class="bid-live-grid">
+            <div class="bid-player">
+              <div class="bid-player-label">Leading</div>
+              <div class="player-avatar empty" id="leadingAvatar">—</div>
+              <div class="player-name" id="leadingName">—</div>
+              <div class="player-amount none" id="leadingAmount">No bid</div>
+            </div>
+
+            <div style="display:flex;flex-direction:column;align-items:center;gap:3px;">
+              <div class="timer-circle" id="timerCircle">
+                <div class="timer-inner" id="timerInner">
+                  <span class="timer-number" id="timerNumber">—</span>
+                  <span class="timer-sub">LEFT</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="bid-player">
+              <div class="bid-player-label">Previous</div>
+              <div class="player-avatar you" id="prevAvatar">CA</div>
+              <div class="player-name" id="prevName">You</div>
+              <div class="player-amount none" id="prevAmount">No bid</div>
+            </div>
+          </div>
+
+          <!-- Reserve progress bar -->
+          <div class="reserve-bar">
+            <div class="reserve-fill" id="reserveFill" style="width:0%"></div>
+          </div>
+          <div class="reserve-label" id="reserveLabel">Reserve Price</div>
+
+          <!-- Current Bid Row -->
+          <div class="current-bid-row">
+            <div class="current-bid-block">
+              <div class="label">Current Bid</div>
+              <div class="amount" id="currentBid">—</div>
+            </div>
+            <div class="asking-block">
+              <div class="label">Auctioneer is asking</div>
+              <div class="amount" id="currentAsk">—</div>
+            </div>
+          </div>
+
+          <!-- Bid Buttons -->
+          <div class="bid-buttons" id="bidButtons">
+            <button class="btn-bid-primary" disabled>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+              Start auction to bid
+            </button>
+          </div>
+          <div class="tap-label">Tap to bid instantly</div>
+
+
+        </div><!-- /live-bid-area -->
+
+      </div><!-- /vehicle-details -->
+
+      <!-- ── Column 3: Upcoming Lots ── -->
+      <div class="upcoming-lots">
+        <div class="upcoming-header">
+          <div class="upcoming-title">Lots <span id="lotsCount"></span></div>
+        </div>
+        <div class="lots-list" id="lotsList">
+          <div style="padding:16px;font-size:12px;color:#9ca3af;text-align:center;">Loading lots…</div>
+        </div>
+      </div><!-- /upcoming-lots -->
+
+    </div><!-- /auction-layout -->
+  </main><!-- /main-content -->
+</div><!-- /app-body -->
+
+<!-- ═══════════════ SETUP MODAL ═══════════════ -->
+<div class="setup-modal-bg" id="setupModalBg" onclick="closeSetupIfBg(event)">
+  <div class="setup-modal">
+    <div class="setup-modal-title">
+      <div class="dot"></div>
+      Start Live Auction
+    </div>
+    <div class="setup-grid">
+      <div class="setup-field full">
+        <label>Vehicle</label>
+        <select id="vehicleSelect"></select>
+      </div>
+      <div class="setup-field">
+        <label>Starting Bid</label>
+        <input id="start_price" type="number" value="1000" min="100"/>
+      </div>
+      <div class="setup-field">
+        <label>Reserve Price</label>
+        <input id="end_price" type="number" value="6000" min="100"/>
+      </div>
+      <div class="setup-field">
+        <label>Bid Increment</label>
+        <input id="increment" type="number" value="200" min="50"/>
+      </div>
+      <div class="setup-field" style="display:flex;align-items:flex-end;">
+        <label style="cursor:pointer;">
+          <input type="checkbox" id="declarationsEnabled" checked style="margin-right:4px;"/>
+          Use declarations
+        </label>
+      </div>
+    </div>
+    <button class="btn-start" id="startBtn" onclick="startAuction()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+      Start Auction
+    </button>
+  </div>
+</div>
+
+<!-- ═══════════════ TTS PANEL ═══════════════ -->
+<div class="tts-panel" id="ttsPanel">
+  <div class="tts-panel-title">TTS Settings</div>
+  <div class="tts-row">
+    <label>Model</label>
+    <select id="modelSelect" onchange="saveTtsSettings()"></select>
+  </div>
+  <div class="tts-row">
+    <label>Stability <span id="stabilityVal">0.50</span></label>
+    <input type="range" id="stability" min="0" max="1" step="0.05" value="0.5" oninput="document.getElementById('stabilityVal').textContent=parseFloat(this.value).toFixed(2);saveTtsSettings()"/>
+  </div>
+  <div class="tts-row">
+    <label>Similarity <span id="similarityVal">0.75</span></label>
+    <input type="range" id="similarity_boost" min="0" max="1" step="0.05" value="0.75" oninput="document.getElementById('similarityVal').textContent=parseFloat(this.value).toFixed(2);saveTtsSettings()"/>
+  </div>
+  <div class="tts-row">
+    <label>Style <span id="styleVal">0.20</span></label>
+    <input type="range" id="style" min="0" max="1" step="0.05" value="0.20" oninput="document.getElementById('styleVal').textContent=parseFloat(this.value).toFixed(2);saveTtsSettings()"/>
+  </div>
+  <div class="tts-row">
+    <label>Speed <span id="speedVal">1.20</span></label>
+    <input type="range" id="speed" min="0.7" max="1.2" step="0.05" value="1.2" oninput="document.getElementById('speedVal').textContent=parseFloat(this.value).toFixed(2);saveTtsSettings()"/>
+  </div>
+  <div class="tts-toggle">
+    <input type="checkbox" id="use_speaker_boost" checked onchange="saveTtsSettings()"/>
+    <label for="use_speaker_boost">Speaker Boost</label>
+  </div>
+</div>
+
+<!-- ═══════════════ REPORT MODAL ═══════════════ -->
+<div class="report-overlay" id="reportOverlay" onclick="closeReport()">
+  <div class="report-modal" onclick="event.stopPropagation()">
+    <div class="report-modal-header">
+      <span>SESSION REPORT</span>
+      <div class="report-actions">
+        <button class="report-btn" onclick="copyReport(this)">Copy</button>
+        <button class="report-btn" onclick="downloadReport()">Download</button>
+        <button class="report-btn" onclick="closeReport()">✕ Close</button>
+      </div>
+    </div>
+    <pre class="report-body" id="reportBody"></pre>
+  </div>
+</div>
+
+<script>
+  // ═══════════════ STATE ═══════════════
+  let state = { status: 'idle', messages: [], bid_amounts: [], bidders: [] };
+  let lots  = [];
+
+  // ═══════════════ CAROUSEL ═══════════════
+  const CAROUSEL_IMAGES = [
+    '/images/New%20UI/BMW%20X%20Drive-%20new/87250995_Image_1.jpg',
+    '/images/New%20UI/BMW%20X%20Drive-%20new/87250995_Image_2.jpg',
+    '/images/New%20UI/BMW%20X%20Drive-%20new/87250995_Image_3.jpg',
+    '/images/New%20UI/BMW%20X%20Drive-%20new/87250995_Image_4.jpg',
+    '/images/New%20UI/BMW%20X%20Drive-%20new/87250995_Image_5.jpg',
+    '/images/New%20UI/BMW%20X%20Drive-%20new/87250995_Image_6.jpg',
+    '/images/New%20UI/BMW%20X%20Drive-%20new/87250995_Image_9.jpg',
+    '/images/New%20UI/BMW%20X%20Drive-%20new/87250995_Image_10.jpg',
+    '/images/New%20UI/BMW%20X%20Drive-%20new/87250995_Image_11.jpg',
+    '/images/New%20UI/BMW%20X%20Drive-%20new/87250995_Image_12.jpg',
+  ];
+  let carouselIdx   = 0;
+  let carouselTimer = null;
+
+  function startCarousel() {
+    renderCarousel();
+    if (carouselTimer) clearInterval(carouselTimer);
+    carouselTimer = setInterval(() => {
+      carouselIdx = (carouselIdx + 1) % CAROUSEL_IMAGES.length;
+      renderCarousel();
+    }, 5000);
+  }
+
+  function renderCarousel() {
+    const img   = document.getElementById('carouselImg');
+    const ctr   = document.getElementById('carouselCounter');
+    const thumbs = document.getElementById('thumbnailsRow');
+    if (img) {
+      img.style.opacity = '0';
+      setTimeout(() => { img.src = CAROUSEL_IMAGES[carouselIdx]; img.style.opacity = '1'; }, 200);
+    }
+    if (ctr) ctr.textContent = `${carouselIdx + 1} / ${CAROUSEL_IMAGES.length}`;
+    if (thumbs) {
+      thumbs.innerHTML = CAROUSEL_IMAGES.map((src, i) =>
+        `<div class="thumb ${i === carouselIdx ? 'active' : ''}" onclick="goToSlide(${i})" style="overflow:hidden;">
+          <img src="${src}" style="width:100%;height:100%;object-fit:cover;border-radius:1px;"/>
+        </div>`
+      ).join('');
+    }
+  }
+
+  function goToSlide(i) {
+    carouselIdx = i;
+    renderCarousel();
+    if (carouselTimer) clearInterval(carouselTimer);
+    carouselTimer = setInterval(() => {
+      carouselIdx = (carouselIdx + 1) % CAROUSEL_IMAGES.length;
+      renderCarousel();
+    }, 5000);
+  }
+
+  // ═══════════════ LOT HIGHLIGHTS TICKER ═══════════════
+  const TICKER_ITEMS = [
+    { badge: 'Declaration',  key: 'declarationText'  },
+    { badge: 'AI Insight',   key: 'aiSummaryText'    },
+    { badge: 'Announcement', key: 'announcementsText'},
+    { badge: 'My Notes',     key: 'notesText'        },
+  ];
+  let tickerIdx   = 0;
+  let tickerTimer = null;
+
+  function startTicker() {
+    renderTicker();
+    if (tickerTimer) clearInterval(tickerTimer);
+    tickerTimer = setInterval(() => {
+      tickerIdx = (tickerIdx + 1) % TICKER_ITEMS.length;
+      renderTicker();
+    }, 5000);
+  }
+
+  function renderTicker() {
+    const badge = document.getElementById('tickerBadge');
+    const text  = document.getElementById('tickerText');
+    const dots  = document.getElementById('tickerDots');
+    const item  = TICKER_ITEMS[tickerIdx];
+    const src   = document.getElementById(item.key);
+    const content = src ? src.textContent.trim() : '—';
+    if (text) {
+      text.style.opacity = '0';
+      setTimeout(() => {
+        if (badge) badge.textContent = item.badge;
+        text.textContent = content;
+        text.style.opacity = '1';
+      }, 280);
+    }
+    if (dots) {
+      dots.innerHTML = TICKER_ITEMS.map((_, i) =>
+        `<div class="ticker-dot ${i === tickerIdx ? 'active' : ''}" onclick="jumpTicker(${i})"></div>`
+      ).join('');
+    }
+  }
+
+  function jumpTicker(i) {
+    tickerIdx = i;
+    renderTicker();
+    if (tickerTimer) clearInterval(tickerTimer);
+    tickerTimer = setInterval(() => {
+      tickerIdx = (tickerIdx + 1) % TICKER_ITEMS.length;
+      renderTicker();
+    }, 5000);
+  }
+
+  // ═══════════════ INFO TABS ═══════════════
+  function switchTab(tab) {
+    document.getElementById('tabBtnAnn').classList.toggle('active', tab === 'ann');
+    document.getElementById('tabBtnNotes').classList.toggle('active', tab === 'notes');
+    document.getElementById('tabAnn').classList.toggle('active', tab === 'ann');
+    document.getElementById('tabNotes').classList.toggle('active', tab === 'notes');
+  }
+
+  // Track previous (trailing) bidder for the UI
+  let trailingBidder = { name: 'You', id: 'california', amount: 0 };
+  let lastLeader     = null;  // track leader changes
+
+  // ═══════════════ SPEECH CONFIG ═══════════════
+  let speechConfig = {
+    filler_chain_max: 3, filler_delay_ms: 0,
+    highlight_delay_seconds: 4, min_bids_first: 2,
+    bids_between: 3, timer_duration_seconds: 10,
+  };
+  let highlightDelay = 4000;
+
+  function applySpeechConfig(cfg) {
+    if (!cfg) return;
+    Object.assign(speechConfig, cfg);
+    highlightDelay = (speechConfig.highlight_delay_seconds || 4) * 1000;
+  }
+
+  function applyResponse(data) {
+    if (!data) return;
+    if (data.slim) {
+      if (data.msg && !data.filler_only) state.messages = [...(state.messages || []), data.msg];
+      if (data.status               != null) state.status               = data.status;
+      if (data.highlights_played    != null) state.highlights_played    = data.highlights_played;
+      if (data.bids_since_highlight != null) state.bids_since_highlight = data.bids_since_highlight;
+      if (data.bid_count            != null) state.bid_count            = data.bid_count;
+    } else {
+      state = data;
+    }
+  }
+
+  // ═══════════════ AUDIO ═══════════════
+  let muted        = false;
+  let currentAudio = null;
+  let audioQueue   = [];
+  let audioPlaying = false;
+  let fillerPlaying = false;
+
+  function toggleMute() {
+    muted = !muted;
+    const btn  = document.getElementById('muteBtn');
+    const sBtn = document.getElementById('soundBtn');
+    btn.textContent = muted ? '🔇 Voice Off' : '🔊 Voice On';
+    btn.classList.toggle('muted', muted);
+    if (muted && currentAudio) { currentAudio.pause(); currentAudio = null; setAvatarSpeaking(false); }
+  }
+
+  function setAvatarSpeaking(on) {
+    const img = document.getElementById('auctioneerImg');
+    if (img) img.classList.toggle('speaking', on);
+  }
+
+  function showFillerSpeaking(on) {
+    const el = document.getElementById('fillerDots');
+    if (el) el.classList.toggle('active', on);
+  }
+
+  function _playNext() {
+    if (audioQueue.length === 0) { audioPlaying = false; return; }
+    audioPlaying = true;
+    const { b64, isFiller, onended } = audioQueue.shift();
+    if (muted || !b64) {
+      setAvatarSpeaking(false);
+      if (onended) onended();
+      _playNext();
+      return;
+    }
+    if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+    // v8 uses MP3 format
+    currentAudio = new Audio(`data:audio/mp3;base64,${b64}`);
+    fillerPlaying = isFiller;
+    setAvatarSpeaking(true);
+    currentAudio.addEventListener('ended', () => {
+      setAvatarSpeaking(false); fillerPlaying = false;
+      if (onended) onended();
+      _playNext();
+    }, { once: true });
+    currentAudio.play().catch(() => {
+      setAvatarSpeaking(false); fillerPlaying = false;
+      if (onended) onended();
+      _playNext();
+    });
+  }
+
+  function enqueueAudio(b64, isFiller, onended) {
+    audioQueue.push({ b64, isFiller: !!isFiller, onended: onended || null });
+    if (!audioPlaying) _playNext();
+  }
+
+  function playAudio(b64, onended) { enqueueAudio(b64, false, onended); }
+
+  function stopAllAudio() {
+    audioQueue = []; audioPlaying = false; fillerPlaying = false;
+    if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+    setAvatarSpeaking(false); showFillerSpeaking(false);
+  }
+
+  // ═══════════════ FILLER & HIGHLIGHT ═══════════════
+  let fillerGeneration = 0;
+  let _fillerPrefetch  = null;
+  let highlightTimeout = null;
+  let highlightGeneration = 0;
+
+  function prefetchNextFiller(generation) {
+    if (state.status !== 'active') return;
+    _fillerPrefetch = post('/auction/filler').then(data => {
+      if (generation !== fillerGeneration || !data || data.skip || data.error) return null;
+      return data;
+    }).catch(() => null);
+  }
+
+  async function runFillerChain(generation, count = 0) {
+    if (state.status !== 'active') { showFillerSpeaking(false); return; }
+    if (generation !== fillerGeneration) return;
+    if (count >= speechConfig.filler_chain_max) { showFillerSpeaking(false); return; }
+    if (count === 0 && speechConfig.filler_delay_ms > 0) {
+      await new Promise(r => setTimeout(r, speechConfig.filler_delay_ms));
+      if (generation !== fillerGeneration) return;
+    }
+    let data = null;
+    if (_fillerPrefetch) { data = await _fillerPrefetch; _fillerPrefetch = null; }
+    if (!data) data = await post('/auction/filler');
+    if (generation !== fillerGeneration) return;
+    if (!data || data.skip || data.error) { showFillerSpeaking(false); return; }
+    applyResponse(data);
+    render();
+    showFillerSpeaking(true);
+    if (count + 1 < speechConfig.filler_chain_max) prefetchNextFiller(generation);
+    enqueueAudio(data.audio, true, () => {
+      showFillerSpeaking(false);
+      if (state.status === 'active' && generation === fillerGeneration) runFillerChain(generation, count + 1);
+    });
+  }
+
+  function cancelFillers() { fillerGeneration++; _fillerPrefetch = null; showFillerSpeaking(false); }
+  function scheduleFillers() { cancelFillers(); runFillerChain(fillerGeneration, 0); }
+
+
+  async function requestHighlight(generation) {
+    if (state.status !== 'active') return;
+    if (generation !== highlightGeneration) return;
+    const data = await post('/auction/highlight');
+    if (generation !== highlightGeneration) return;
+    if (data.skip || data.error) return;
+    applyResponse(data); render();
+    cancelFillers();
+    const fillerGen = fillerGeneration;
+    enqueueAudio(data.audio, false, () => {
+      if (state.status === 'active' && fillerGen === fillerGeneration) runFillerChain(fillerGen, 0);
+    });
+  }
+
+  function cancelHighlight() {
+    highlightGeneration++;
+    if (highlightTimeout) { clearTimeout(highlightTimeout); highlightTimeout = null; }
+  }
+
+  function scheduleHighlight() {
+    cancelHighlight();
+    const gen = highlightGeneration;
+    highlightTimeout = setTimeout(() => requestHighlight(gen), highlightDelay);
+  }
+
+  // ═══════════════ TIMER CIRCLE ═══════════════
+  let timerInterval  = null;
+  let timerSeconds   = 0;
+  let timerTotal     = 10;
+  let timerCloseTimeout = null;
+
+  function startTimer() {
+    stopTimer();
+    timerTotal   = speechConfig.timer_duration_seconds || 10;
+    timerSeconds = timerTotal;
+    updateTimerCircle();
+    timerInterval = setInterval(() => {
+      timerSeconds--;
+      if (timerSeconds < 0) timerSeconds = 0;
+      updateTimerCircle();
+    }, 1000);
+    timerCloseTimeout = setTimeout(() => {
+      if (state.status === 'active') forceClose();
+    }, timerTotal * 1000);
+  }
+
+  function stopTimer() {
+    if (timerInterval)      { clearInterval(timerInterval);     timerInterval = null; }
+    if (timerCloseTimeout)  { clearTimeout(timerCloseTimeout);  timerCloseTimeout = null; }
+    const num  = document.getElementById('timerNumber');
+    const circ = document.getElementById('timerCircle');
+    const inn  = document.getElementById('timerInner');
+    if (num)  num.textContent = '—';
+    if (circ) circ.style.background = 'conic-gradient(#d1d5db 100%, #e5e7eb 0%)';
+    if (inn)  inn.style.background = '#9ca3af';
+  }
+
+  function updateTimerCircle() {
+    const pct   = timerTotal > 0 ? (timerSeconds / timerTotal) * 100 : 0;
+    const color = timerSeconds > timerTotal * 0.3 ? '#22c55e' : '#ef4444';
+    const bgColor = timerSeconds > timerTotal * 0.3 ? '#16a34a' : '#dc2626';
+    const num   = document.getElementById('timerNumber');
+    const circ  = document.getElementById('timerCircle');
+    const inn   = document.getElementById('timerInner');
+    if (num)  num.textContent = timerSeconds > 0 ? timerSeconds : '0';
+    if (circ) circ.style.background = `conic-gradient(${color} ${Math.round(pct)}%, #e5e7eb ${Math.round(pct)}%)`;
+    if (inn)  inn.style.background = bgColor;
+  }
+
+  // ═══════════════ EVENT POLLING (auto-bids) ═══════════════
+  let lastEventId  = 0;
+  let pollInterval = null;
+
+  function startPolling() {
+    if (pollInterval) return;
+    pollInterval = setInterval(pollEvents, 400);
+  }
+
+  function stopPolling() {
+    if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
+  }
+
+  async function pollEvents() {
+    if (state.status !== 'active') { stopPolling(); return; }
+    try {
+      const data = await fetch(`/auction/events?since=${lastEventId}`).then(r => r.json());
+      if (!data.events || data.events.length === 0) return;
+      for (const evt of data.events) { lastEventId = evt.id; handleAutoEvent(evt); }
+    } catch (e) {}
+  }
+
+  function handleAutoEvent(evt) {
+    if (evt.state) Object.assign(state, evt.state);
+
+    if (evt.bidder_id && evt.amount) {
+      const bidder = (state.bidders || []).find(b => b.id === evt.bidder_id);
+      const name   = bidder ? bidder.name : evt.bidder_name || evt.bidder_id;
+      state.messages = [...(state.messages || []),
+        { type: 'bid', text: `${name}: $${evt.amount.toLocaleString()}`, bidder: evt.bidder_id }
+      ];
+      if (evt.ui_message) state.messages = [...state.messages, { type: 'auctioneer', text: evt.ui_message }];
+    }
+    if (state.status === 'active' && state.current_ask && state.increment) {
+      const ask = state.current_ask, inc = state.increment;
+      state.bid_amounts = [ask, ask + inc, ask + 2 * inc];
+    }
+
+    // Update trailing bidder
+    updateTrailingBidder();
+    render();
+
+    // Always clear stale audio — if we let queued bid clips pile up, audio
+    // falls behind state by several bids. Always play only the latest clip.
+    stopAllAudio();
+    cancelFillers(); cancelHighlight();
+
+    if (state.status === 'active') {
+      startTimer();
+      const gen = fillerGeneration;
+      prefetchNextFiller(gen);
+      enqueueAudio(evt.audio, false, () => { scheduleHighlight(); runFillerChain(gen, 0); });
+    } else {
+      stopPolling(); stopTimer();
+      enqueueAudio(evt.audio, false, () => {
+        if (evt.session_report) showReport(evt.session_report, state.vehicle);
+      });
+    }
+  }
+
+  function updateTrailingBidder() {
+    const leader = state.leading_bidder;
+    if (leader && leader !== lastLeader) {
+      // Leader just changed — the previous leader becomes trailing
+      if (lastLeader) {
+        const bids = (state.messages || []).filter(m => m.type === 'bid' && m.bidder === lastLeader);
+        if (bids.length > 0) {
+          const lastBid = bids[bids.length - 1];
+          const match   = lastBid.text.match(/\$([\d,]+)/);
+          const amount  = match ? parseInt(match[1].replace(/,/g,''), 10) : 0;
+          const bidder  = (state.bidders || []).find(b => b.id === lastLeader);
+          trailingBidder = { name: bidder ? bidder.name : lastLeader, id: lastLeader, amount };
+        }
+      } else if (leader !== 'california') {
+        // First bid by auto-bidder; California hasn't bid yet
+        trailingBidder = { name: 'You', id: 'california', amount: 0 };
+      }
+      lastLeader = leader;
+    }
+  }
+
+  // ═══════════════ API CALLS ═══════════════
+  async function post(url, body = {}) {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    return res.json();
+  }
+
+  async function startAuction() {
+    stopPolling(); stopAllAudio(); cancelFillers(); cancelHighlight();
+    lastEventId = 0; lastLeader = null;
+    trailingBidder = { name: 'You', id: 'california', amount: 0 };
+    closeSetup();
+
+    const vehicle = document.getElementById('vehicleSelect').value;
+    state = await post('/auction/start', {
+      vehicle,
+      start_price:          parseInt(document.getElementById('start_price').value),
+      end_price:            parseInt(document.getElementById('end_price').value),
+      increment:            parseInt(document.getElementById('increment').value),
+      declarations_enabled: document.getElementById('declarationsEnabled').checked,
+    });
+    applySpeechConfig(state.speech_config);
+    render(); startPolling();
+
+    // Load declaration for the vehicle details panel
+    const lot = lots.find(l => l.name === vehicle);
+    if (lot && lot.declaration) {
+      document.getElementById('declarationText').textContent = lot.declaration;
+    }
+
+    // Timer, highlights, and auto-bidding only start after ALL opening audio finishes
+    function onOpeningComplete() {
+      startTimer();
+      scheduleHighlight();
+      post('/auction/ready');
+    }
+
+    if (state.lot_video_url) {
+      showDeclarationVideo(state.lot_video_url, state.bidcall_audio, onOpeningComplete);
+    } else if (state.declaration_audio) {
+      playAudio(state.declaration_audio, () => playAudio(state.bidcall_audio, onOpeningComplete));
+    } else {
+      playAudio(state.audio, onOpeningComplete);
+    }
+  }
+
+  async function placeBid(amount) {
+    if (state.status !== 'active') return;
+    cancelFillers(); cancelHighlight(); stopAllAudio();
+
+    const data = await post('/auction/bid', { bidder_id: 'california', amount });
+    if (data.error) { alert(data.error); return; }
+
+    // California just bid — update trailing to whoever was leading before
+    if (state.leading_bidder && state.leading_bidder !== 'california') {
+      const bidder = (state.bidders || []).find(b => b.id === state.leading_bidder);
+      const bids = (state.messages || []).filter(m => m.type === 'bid' && m.bidder === state.leading_bidder);
+      const amount_prev = bids.length ? parseInt((bids[bids.length-1].text.match(/\$([\d,]+)/)||[,'0'])[1].replace(/,/g,''), 10) : 0;
+      trailingBidder = { name: bidder ? bidder.name : state.leading_bidder, id: state.leading_bidder, amount: amount_prev };
+    }
+    lastLeader = 'california';
+
+    Object.assign(state, data);
+    render();
+
+    if (state.status === 'active') {
+      startTimer();
+      const gen = fillerGeneration;
+      prefetchNextFiller(gen);
+      enqueueAudio(data.audio, false, () => { scheduleHighlight(); runFillerChain(gen, 0); });
+    } else {
+      stopPolling(); stopTimer();
+      enqueueAudio(data.audio, false, () => {
+        if (data.session_report) showReport(data.session_report, state.vehicle);
+      });
+    }
+  }
+
+  async function forceClose() {
+    stopPolling(); cancelFillers(); cancelHighlight(); stopAllAudio();
+    const data = await post('/auction/close');
+    Object.assign(state, data);
+    render(); stopTimer();
+    enqueueAudio(data.audio, false, () => {
+      if (data.session_report) showReport(data.session_report, state.vehicle);
+    });
+  }
+
+  async function resetAuction() {
+    stopPolling(); cancelFillers(); cancelHighlight(); stopAllAudio(); stopTimer();
+    lastEventId = 0; lastLeader = null;
+    trailingBidder = { name: 'You', id: 'california', amount: 0 };
+    const data = await post('/auction/reset');
+    const report  = data.session_report;
+    const vehicle = state.vehicle || '';
+    state = data;
+    render();
+    if (report) showReport(report, vehicle);
+    renderLots(); // refresh lots panel
+  }
+
+  async function reloadConfig() {
+    await fetch('/reload-config', { method: 'POST' });
+  }
+
+  // ═══════════════ DECLARATION VIDEO ═══════════════
+  let _pendingBidcallAudio    = null;
+  let _onDeclarationComplete  = null;
+
+  function showDeclarationVideo(videoUrl, bidcallAudio, onComplete) {
+    _pendingBidcallAudio   = bidcallAudio || null;
+    _onDeclarationComplete = onComplete   || null;
+    const overlay = document.getElementById('videoOverlay');
+    const video   = document.getElementById('declarationVideo');
+    video.src = videoUrl;
+    overlay.classList.add('active');
+    video.addEventListener('ended', closeDeclarationVideo, { once: true });
+    video.play().catch(() => closeDeclarationVideo());
+  }
+
+  function closeDeclarationVideo() {
+    const overlay = document.getElementById('videoOverlay');
+    const video   = document.getElementById('declarationVideo');
+    overlay.classList.remove('active');
+    video.pause(); video.src = '';
+    const cb = _onDeclarationComplete;
+    _onDeclarationComplete = null;
+    if (_pendingBidcallAudio) {
+      playAudio(_pendingBidcallAudio, cb);
+      _pendingBidcallAudio = null;
+    } else if (cb) {
+      cb();
+    }
+  }
+
+  // ═══════════════ CHAT BUBBLES ═══════════════
+  function renderChatBubbles() {
+    const stack = document.getElementById('chatBubblesStack');
+    if (!stack) return;
+    const msgs = (state.messages || []).filter(m => m.type === 'auctioneer');
+    if (msgs.length === 0) {
+      stack.innerHTML = `<div class="chat-bubble bubble-current">
+        <span class="chat-label">🎙 Auctioneer</span>
+        <span class="chat-msg">Configure the auction and press Start to begin.</span>
+      </div>`;
+      return;
+    }
+    const recent = msgs.slice(-3);
+    stack.innerHTML = recent.map((m, i) => {
+      const ageClass = i === recent.length - 1 ? 'bubble-current'
+                     : i === recent.length - 2 ? 'bubble-old1'
+                     : 'bubble-old2';
+      return `<div class="chat-bubble ${ageClass}">
+        <span class="chat-label">🎙 Auctioneer</span>
+        <span class="chat-msg">${escHtml(m.text.replace(/\n/g, ' '))}</span>
+      </div>`;
+    }).join('');
+  }
+
+  // ═══════════════ RENDERING ═══════════════
+  function fmt(n) { return '$' + Number(n).toLocaleString(); }
+
+  function escHtml(str) {
+    return String(str)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,' ');
+  }
+
+  function render() {
+    const s      = state;
+    const active = s.status === 'active';
+    const sold   = s.status === 'sold';
+    const idle   = s.status === 'idle';
+
+    applySpeechConfig(s.speech_config);
+
+    // Header
+    const pill = document.getElementById('statusPill');
+    if (pill) {
+      pill.textContent = idle ? 'IDLE' : active ? 'LIVE' : '🔨 SOLD';
+      pill.className   = 'header-status-pill' + (active ? ' live' : '');
+    }
+    const laneTitle = document.getElementById('laneTitle');
+    if (laneTitle && s.vehicle) laneTitle.textContent = `${s.vehicle} – Lane A`;
+    else if (laneTitle) laneTitle.textContent = 'Live Auction – Lane A';
+
+    // Vehicle title
+    document.getElementById('vehicleTitle').textContent = s.vehicle || '—';
+
+    // Lot meta
+    const lotMeta = document.getElementById('lotMetaText');
+    if (lotMeta) lotMeta.textContent = active ? `Lot #${s.bid_count || 0} bids · Reserve: ${s.end_price ? fmt(s.end_price) : '—'}` : (s.vehicle ? `Reserve: ${fmt(s.end_price)}` : 'Select a vehicle to start');
+
+    // Badges
+    const badgeRow = document.getElementById('statusBadgeRow');
+    if (badgeRow) {
+      if (active) {
+        badgeRow.innerHTML = `<span class="badge badge-live"><span class="dot dot-red"></span> Live</span><span class="badge badge-green">Simulator</span>`;
+      } else if (sold) {
+        badgeRow.innerHTML = `<span class="badge badge-yellow">Sold</span><span class="badge badge-blue">Simulator</span>`;
+      } else {
+        badgeRow.innerHTML = `<span class="badge badge-blue">Simulator</span>`;
+      }
+    }
+
+    // Bid amounts / buttons
+    document.getElementById('currentBid').textContent = (s.current_bid && !idle) ? fmt(s.current_bid) : '—';
+    document.getElementById('currentAsk').textContent = active ? fmt(s.current_ask) : '—';
+
+    // Live indicator
+    const liveDot   = document.getElementById('liveDot');
+    const liveLabel = document.getElementById('liveLabel');
+    if (liveDot)   liveDot.style.opacity   = active ? '1' : '0';
+    if (liveLabel) liveLabel.style.opacity = active ? '1' : '0';
+
+    // Bid area tint — green if user is winning, red if losing
+    const bidArea = document.querySelector('.live-bid-area');
+    if (bidArea) {
+      bidArea.classList.toggle('winning', active && s.leading_bidder === 'california');
+      bidArea.classList.toggle('losing',  active && !!s.leading_bidder && s.leading_bidder !== 'california');
+    }
+
+    // Reserve fill bar
+    const fill  = document.getElementById('reserveFill');
+    const label = document.getElementById('reserveLabel');
+    if (fill && s.end_price && s.current_bid) {
+      const pct = Math.min(100, Math.round((s.current_bid / s.end_price) * 100));
+      fill.style.width = pct + '%';
+      fill.style.background = pct >= 100 ? '#ef4444' : pct >= 75 ? '#f59e0b' : '#22c55e';
+    }
+    if (label && s.end_price) {
+      const atReserve = s.current_bid >= s.end_price;
+      label.textContent = atReserve ? '★ Reserve Met!' : `Reserve: ${fmt(s.end_price)}`;
+      label.style.color = atReserve ? '#16a34a' : '';
+    }
+
+    // Leading bidder
+    const leadingAvatar = document.getElementById('leadingAvatar');
+    const leadingName   = document.getElementById('leadingName');
+    const leadingAmount = document.getElementById('leadingAmount');
+    if (s.leading_bidder && s.leading_name) {
+      const initials = s.leading_name.substring(0, 2).toUpperCase();
+      leadingAvatar.textContent = initials;
+      leadingAvatar.className   = `player-avatar ${s.leading_bidder}`;
+      leadingName.textContent   = s.leading_name;
+      leadingAmount.textContent = fmt(s.current_bid);
+      leadingAmount.className   = 'player-amount';
+    } else {
+      leadingAvatar.textContent = '—';
+      leadingAvatar.className   = 'player-avatar empty';
+      leadingName.textContent   = '—';
+      leadingAmount.textContent = 'No bid';
+      leadingAmount.className   = 'player-amount none';
+    }
+
+    // Trailing (previous) bidder
+    const prevAvatar = document.getElementById('prevAvatar');
+    const prevName   = document.getElementById('prevName');
+    const prevAmount = document.getElementById('prevAmount');
+    prevAvatar.textContent = trailingBidder.name.substring(0, 2).toUpperCase();
+    prevAvatar.className   = `player-avatar ${trailingBidder.id === 'california' ? 'you' : trailingBidder.id}`;
+    prevName.textContent   = trailingBidder.id === 'california' ? 'You' : trailingBidder.name;
+    if (trailingBidder.amount > 0) {
+      prevAmount.textContent = fmt(trailingBidder.amount);
+      prevAmount.className   = 'player-amount';
+    } else {
+      prevAmount.textContent = 'No bid';
+      prevAmount.className   = 'player-amount none';
+    }
+
+    // Bid buttons
+    const bidBtns = document.getElementById('bidButtons');
+    if (!active || !s.bid_amounts || s.bid_amounts.length === 0) {
+      bidBtns.innerHTML = `<button class="btn-bid-primary" disabled>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        ${active ? 'Loading…' : 'Start auction to bid'}
+      </button>`;
+    } else {
+      const [ask, jump, high] = s.bid_amounts;
+      bidBtns.innerHTML = `
+        <button class="btn-bid-primary" onclick="placeBid(${ask})">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          Bid ${fmt(ask)}
+        </button>
+        <button class="btn-bid-secondary" onclick="placeBid(${jump})">Bid ${fmt(jump)}</button>
+        <button class="btn-bid-secondary" onclick="placeBid(${high})">Bid ${fmt(high)}</button>
+      `;
+    }
+
+    // Sold overlay
+    const soldOverlay = document.getElementById('soldOverlay');
+    if (sold) {
+      soldOverlay.classList.add('visible');
+      document.getElementById('soldSub').textContent = `${fmt(s.current_bid)} — ${s.leading_name || 'No bidder'}`;
+    } else {
+      soldOverlay.classList.remove('visible');
+    }
+
+    // Header buttons
+    document.getElementById('closeBtn').disabled = !active || !s.leading_bidder;
+    document.getElementById('resetBtn').disabled = idle;
+
+    renderChatBubbles();
+    renderBidHistory();
+    renderCompetitors();
+    renderLots();
+  }
+
+  function renderBidHistory() {
+    const hist = document.getElementById('bidHistory');
+    const msgs = (state.messages || []).filter(m => m.type === 'bid');
+    if (msgs.length === 0) {
+      hist.innerHTML = '<div class="bid-history-empty">No bids yet</div>';
+      return;
+    }
+    const recent = msgs.slice(-8).reverse();
+    // First row (newest) that belongs to the leading bidder is the winning bid
+    let winningMarked = false;
+    hist.innerHTML = recent.map(m => {
+      const bidder = (state.bidders || []).find(b => b.id === m.bidder);
+      const initials = m.bidder ? m.bidder.substring(0,2).toUpperCase() : '?';
+      const amountMatch = m.text.match(/\$([\d,]+)/);
+      const amount = amountMatch ? amountMatch[0] : '';
+      const name   = bidder ? bidder.name : (m.bidder || '');
+      const isWinner = !winningMarked && m.bidder === state.leading_bidder && state.leading_bidder;
+      if (isWinner) winningMarked = true;
+      return `<div class="bid-row${isWinner ? ' winning' : ''}">
+        <div class="bid-avatar ${m.bidder || ''}">${initials}</div>
+        <div class="bid-name">${escHtml(name)}</div>
+        <div class="bid-amount">${escHtml(amount)}${isWinner ? ' 🏆' : ''}</div>
+      </div>`;
+    }).join('');
+  }
+
+  function renderCompetitors() {
+    const panel = document.getElementById('competitorsPanel');
+    if (!panel) return;
+    const s      = state;
+    const active = s.status === 'active';
+    const budgets = s.auto_budgets || {};
+
+    if (!active) {
+      panel.innerHTML = `<span style="font-size:11px;color:#9ca3af;">Auction not started</span>`;
+      return;
+    }
+
+    panel.innerHTML = ['texas', 'vegas'].map(id => {
+      const bidder  = (s.bidders || []).find(b => b.id === id);
+      const name    = bidder ? `${bidder.emoji} ${bidder.name}` : id;
+      const max     = budgets[id] || 0;
+      const isLead  = s.leading_bidder === id;
+      const maxedOut = max > 0 && s.current_ask > max;
+      let statusText, statusColor;
+      if (isLead)         { statusText = 'LEADING';   statusColor = '#16a34a'; }
+      else if (maxedOut)  { statusText = 'Maxed out'; statusColor = '#ef4444'; }
+      else if (max > 0)   { statusText = 'Bidding';   statusColor = '#2563eb'; }
+      else                { statusText = 'Watching';  statusColor = '#9ca3af'; }
+      return `<span style="display:inline-flex;align-items:center;gap:5px;background:#f3f4f6;border-radius:20px;padding:3px 9px;font-size:11px;">
+        <span style="width:7px;height:7px;border-radius:50%;background:${statusColor};flex-shrink:0;"></span>
+        <strong>${escHtml(name)}</strong>
+        <span style="color:#6b7280;">${statusText}</span>
+      </span>`;
+    }).join('');
+  }
+
+  function renderLots() {
+    const list  = document.getElementById('lotsList');
+    const count = document.getElementById('lotsCount');
+    if (!list) return;
+    if (!lots.length) {
+      list.innerHTML = '<div style="padding:14px;font-size:11px;color:#9ca3af;text-align:center;">No lots found</div>';
+      return;
+    }
+    if (count) count.textContent = `(${lots.length})`;
+    document.getElementById('lotsBadge').textContent = lots.length;
+
+    const activeName = state.vehicle || '';
+    const activeIdx  = lots.findIndex(l => l.name === activeName);
+
+    list.innerHTML = lots.map((l, i) => {
+      const isActive = l.name === activeName && state.status !== 'idle';
+      const isNext   = !isActive && i === (activeIdx >= 0 ? activeIdx + 1 : 0) && state.status !== 'idle';
+      const cardClass = isActive ? 'lot-card active-lot' : isNext ? 'lot-card up-next' : 'lot-card';
+      const badge = isActive
+        ? `<span class="lot-card-badge badge-active-lot">LIVE</span>`
+        : isNext ? `<span class="lot-card-badge badge-next-lot">UP NEXT</span>`
+        : `<span class="lot-card-badge badge-upcoming">#${i+1}</span>`;
+      const bidAmt = isActive && state.current_bid
+        ? `<span class="lot-bid-amount live">${fmt(state.current_bid)}</span>`
+        : `<span class="lot-bid-amount">—</span>`;
+      // Abbreviate title for the thumbnail
+      const abbr = l.name.split(' ').slice(-2).join(' ');
+      return `<div class="${cardClass}" onclick="selectLot('${escHtml(l.name)}')">
+        <div class="lot-card-header">
+          <div class="lot-card-title">${escHtml(l.name)}</div>
+          ${badge}
+        </div>
+        <div class="lot-card-thumb">
+          <div class="lot-thumb"><div class="lot-thumb-text">${escHtml(abbr)}</div></div>
+          <div class="lot-card-meta">
+            <div class="lot-meta-row">${escHtml(l.declaration ? l.declaration.substring(0,60) + '…' : 'No declaration')}</div>
+            <div class="lot-bid-row">
+              <span class="lot-bid-label">${isActive ? 'Current bid' : 'Opening bid'}</span>
+              ${bidAmt}
+            </div>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  function selectLot(name) {
+    const sel = document.getElementById('vehicleSelect');
+    if (sel) {
+      for (const opt of sel.options) {
+        if (opt.value === name) { opt.selected = true; break; }
+      }
+    }
+    if (state.status === 'idle') openSetup();
+  }
+
+  // ═══════════════ SETUP MODAL ═══════════════
+  function openSetup()  { document.getElementById('setupModalBg').classList.add('visible'); }
+  function closeSetup() { document.getElementById('setupModalBg').classList.remove('visible'); }
+  function closeSetupIfBg(e) { if (e.target === document.getElementById('setupModalBg')) closeSetup(); }
+
+  // ═══════════════ TTS PANEL ═══════════════
+  function toggleTtsPanel() {
+    document.getElementById('ttsPanel').classList.toggle('open');
+  }
+
+  async function loadTtsSettings() {
+    const data = await fetch('/tts-settings').then(r => r.json());
+    const s = data.settings;
+    const modelSel = document.getElementById('modelSelect');
+    modelSel.innerHTML = '';
+    data.models.forEach(m => {
+      const opt = document.createElement('option');
+      opt.value = m.id; opt.textContent = m.name;
+      if (m.id === s.model_id) opt.selected = true;
+      modelSel.appendChild(opt);
+    });
+    document.getElementById('stability').value           = s.stability;
+    document.getElementById('stabilityVal').textContent  = s.stability.toFixed(2);
+    document.getElementById('similarity_boost').value    = s.similarity_boost;
+    document.getElementById('similarityVal').textContent = s.similarity_boost.toFixed(2);
+    document.getElementById('style').value               = s.style;
+    document.getElementById('styleVal').textContent      = s.style.toFixed(2);
+    document.getElementById('speed').value               = s.speed;
+    document.getElementById('speedVal').textContent      = s.speed.toFixed(2);
+    document.getElementById('use_speaker_boost').checked = s.use_speaker_boost;
+  }
+
+  async function saveTtsSettings() {
+    await fetch('/tts-settings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model_id:          document.getElementById('modelSelect').value,
+        stability:         parseFloat(document.getElementById('stability').value),
+        similarity_boost:  parseFloat(document.getElementById('similarity_boost').value),
+        style:             parseFloat(document.getElementById('style').value),
+        speed:             parseFloat(document.getElementById('speed').value),
+        use_speaker_boost: document.getElementById('use_speaker_boost').checked,
+      }),
+    });
+  }
+
+  // ═══════════════ VOICES ═══════════════
+  async function loadVoices() {
+    const data = await fetch('/voices').then(r => r.json());
+    const sel  = document.getElementById('voiceSelect');
+    sel.innerHTML = '';
+    data.voices.forEach(v => {
+      const opt = document.createElement('option');
+      opt.value = v.id; opt.textContent = v.name;
+      if (v.id === data.active.id) opt.selected = true;
+      sel.appendChild(opt);
+    });
+  }
+
+  async function changeVoice(sel) {
+    const voice = Array.from(sel.options).find(o => o.value === sel.value);
+    await fetch('/voice', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: sel.value, name: voice ? voice.textContent : sel.value }),
+    });
+  }
+
+  // ═══════════════ LOTS ═══════════════
+  async function loadLots() {
+    const data = await fetch('/lots').then(r => r.json());
+    lots = data.lots || [];
+    const sel = document.getElementById('vehicleSelect');
+    sel.innerHTML = '';
+    if (!lots.length) {
+      sel.innerHTML = '<option value="">No vehicles in lots.txt</option>';
+      return;
+    }
+    lots.forEach(l => {
+      const opt = document.createElement('option');
+      opt.value = opt.textContent = l.name;
+      sel.appendChild(opt);
+    });
+    document.getElementById('lotsCount').textContent = `(${lots.length})`;
+    document.getElementById('lotsBadge').textContent = lots.length;
+    renderLots();
+  }
+
+  // ═══════════════ REPORT MODAL ═══════════════
+  let _reportText = '', _reportVehicle = '';
+
+  function showReport(text, vehicle) {
+    if (!text) return;
+    _reportText    = text;
+    _reportVehicle = vehicle || '';
+    document.getElementById('reportBody').textContent = text;
+    document.getElementById('reportOverlay').classList.add('active');
+  }
+
+  function closeReport() { document.getElementById('reportOverlay').classList.remove('active'); }
+
+  function copyReport(btn) {
+    navigator.clipboard.writeText(_reportText).then(() => {
+      const orig = btn.textContent; btn.textContent = '✓ Copied';
+      setTimeout(() => btn.textContent = orig, 1800);
+    });
+  }
+
+  function downloadReport() {
+    const blob = new Blob([_reportText], { type: 'text/plain' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href = url; a.download = `auction_${(_reportVehicle || 'report').replace(/\s+/g,'_')}.txt`;
+    a.click(); URL.revokeObjectURL(url);
+  }
+
+  // ═══════════════ INIT ═══════════════
+  (async () => {
+    startCarousel();
+    startTicker();
+    await Promise.all([ loadLots(), loadVoices(), loadTtsSettings() ]);
+    const s = await fetch('/auction/state').then(r => r.json());
+    state = s;
+    applySpeechConfig(s.speech_config);
+    render();
+    // Show setup modal on first load if idle
+    if (state.status === 'idle') openSetup();
+  })();
+</script>
+</body>
+</html>
