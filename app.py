@@ -81,6 +81,8 @@ def _short_bid(n: int) -> str:
 def _load_tokens():
     path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'tokens.txt')
     tokens = {}
+    if not os.path.exists(path):
+        return tokens
     with open(path) as f:
         for line in f:
             line = line.strip()
