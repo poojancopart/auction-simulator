@@ -90,7 +90,7 @@ def _load_tokens():
     return tokens
 
 _tokens = _load_tokens()
-_EL_KEY = _tokens.get('elevenlabs-key', '')
+_EL_KEY = os.environ.get('ELEVENLABS_KEY') or _tokens.get('elevenlabs-key', '')
 
 
 def _load_voices():
@@ -1134,5 +1134,6 @@ def serve_image(filename):
 # ---------------------------------------------------------------------------
 
 if __name__ == "__main__":
-    print("Starting Auction Simulator v8 at http://localhost:5006")
-    app.run(debug=False, port=5006, threaded=True)
+    port = int(os.environ.get('PORT', 5006))
+    print(f"Starting Auction Simulator v8 at http://localhost:{port}")
+    app.run(debug=False, host='0.0.0.0', port=port, threaded=True)
