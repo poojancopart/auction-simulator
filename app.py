@@ -11,6 +11,10 @@ from elevenlabs.types import VoiceSettings
 
 app = Flask(__name__)
 
+@app.route('/favicon.ico')
+def favicon():
+    return '', 204
+
 # ---------------------------------------------------------------------------
 # Currency → spoken words
 # ---------------------------------------------------------------------------
