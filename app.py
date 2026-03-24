@@ -256,10 +256,10 @@ _lots = _load_lots()
 
 # TTS settings — defaults as specified
 _tts_settings = {
-    'model_id':          'eleven_flash_v2_5',
-    'stability':         0.5,
+    'model_id':          'eleven_multilingual_v2',
+    'stability':         0.75,
     'similarity_boost':  0.75,
-    'style':             0.20,
+    'style':             0.00,
     'speed':             1.20,
     'use_speaker_boost': True,
 }
