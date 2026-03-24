@@ -76,6 +76,8 @@ def _short_bid(n: int) -> str:
         return _int_to_words(n)
     if n % 1_000 == 0:
         return _int_to_words(n // 1_000)
+    if n >= 10_000:
+        return _int_to_words(n)
     return _int_to_words(n // 100)
 
 # ---------------------------------------------------------------------------
